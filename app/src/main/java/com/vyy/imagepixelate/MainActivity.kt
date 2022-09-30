@@ -23,6 +23,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.bumptech.glide.Glide
 import com.vyy.imagemosaicing.R
 import com.vyy.imagemosaicing.databinding.ActivityMainBinding
 import java.text.SimpleDateFormat
@@ -37,7 +38,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var cameraExecutor: ExecutorService
     private var imageCapture: ImageCapture? = null
     private var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>? = null
-    private var imageBitmap: Bitmap? = null
+    private var imageUri: Uri? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,17 +71,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 // Callback is invoked after the user selects a media item or closes the
                 // photo picker.
                 if (uri != null) {
-                    showProgressDialog(true)
                     Log.d(TAG, "Selected URI: $uri")
 
                     try {
-                        imageBitmap = uriToBitmap(uri)
-
-                        updateImageView()
+                        imageUri = uri
+                        updateImageView(uri)
                     } catch (e: Exception) {
                         Log.e(TAG, "Decoding URI to Bitmap failed: ${e.message}", e)
-                    } finally {
-                        showProgressDialog(false)
                     }
                 } else {
                     Log.d(TAG, "No media selected")
@@ -206,9 +203,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     try {
-                        imageBitmap = outputFileResults.savedUri?.let { uriToBitmap(it) }
+                        imageUri = outputFileResults.savedUri
                         runOnUiThread {
-                            updateImageView()
+                            updateImageView(imageUri)
                         }
                     } catch (e: Exception) {
                         Log.e(TAG, "Converting ImageProxy to Bitmap failed: ${e.message}", e)
@@ -222,29 +219,35 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             })
     }
 
-    // Pixelate algorithm to pixelate bitmap
+    // Decode Uri to Bitmap, and then use pixelate algorithm on the Bitmap.
     private fun pixelateBitmap() {
-        imageBitmap?.let {
+        imageUri?.let { uri ->
             val pixelWidth = binding.textInputEditTextPixelateWidth.text.toString()
             val pixelHeight = binding.textInputEditTextPixelateHeight.text.toString()
             if (pixelWidth.isNotEmpty() && pixelHeight.isNotEmpty()
                 && pixelWidth.toInt() > 0 && pixelHeight.toInt() > 0
-                && pixelWidth.toInt() < it.width && pixelHeight.toInt() < it.height
             ) {
 
                 showProgressDialog(true)
 
                 try {
-                    val width = it.width
-                    val height = it.height
+                    val imageBitmap = uriToBitmap(uri)
+                    // Check if pixel size is smaller then the image.
+                    if (pixelWidth.toInt() > imageBitmap.width
+                        || pixelHeight.toInt() > imageBitmap.height
+                    ) {
+                        Log.e(TAG, "Pixel size is bigger than actual image!")
+                        return
+                    }
+
                     val scaledBitmap = Bitmap.createScaledBitmap(
-                        it,
+                        imageBitmap,
                         pixelWidth.toInt(),
                         pixelHeight.toInt(),
                         false
                     )
-                    imageBitmap = Bitmap.createScaledBitmap(scaledBitmap, width, height, false)
-                    updateImageView()
+
+                    updateImageView(scaledBitmap)
                 } catch (e: Exception) {
                     Log.e(TAG, "Pixelating bitmap failed: ${e.message}", e)
                 } finally {
@@ -258,17 +261,31 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         pickMedia?.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
 
-    private fun updateImageView() {
-        imageBitmap?.let {
-            binding.imageView.setImageBitmap(imageBitmap)
+    // Load image as Uri to imageView
+    private fun updateImageView(uri: Uri?) {
+        uri.let {
+            Glide
+                .with(this)
+                .load(it)
+                .into(binding.imageView)
         }
     }
 
-    private fun showProgressDialog(isShown: Boolean) {
-        binding.progresBar.visibility = if (isShown) View.VISIBLE else View.GONE
-        binding.root.isClickable = !isShown
+    // Load image as Bitmap to imageView
+    private fun updateImageView(bitmap: Bitmap?) {
+        binding.imageView.setImageBitmap(bitmap)
     }
 
+    private fun showProgressDialog(isShown: Boolean) {
+        binding.apply {
+            progresBar.visibility = if (isShown) View.VISIBLE else View.GONE
+            buttonPixelate.isClickable = !isShown
+            cameraButton.isClickable = !isShown
+            galleryButton.isClickable = !isShown
+        }
+    }
+
+    // Decode image uri to Bitmap
     private fun uriToBitmap(uri: Uri) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
         ImageDecoder.decodeBitmap(
             ImageDecoder.createSource(
@@ -280,7 +297,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         @Suppress("DEPRECATION")
         MediaStore.Images.Media.getBitmap(contentResolver, uri)
     }
-
 
     override fun onDestroy() {
         super.onDestroy()

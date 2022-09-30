@@ -30,16 +30,20 @@
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:contentDescription="@string/image" />
-
-        <ProgressBar
-            android:id="@+id/progresBar"
-            style="?android:attr/progressBarStyle"
-            android:visibility="gone"
-            android:layout_gravity="center"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            tools:visibility="visible"/>
     </FrameLayout>
+
+    <ProgressBar
+        android:id="@+id/progresBar"
+        style="?android:attr/progressBarStyle"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:visibility="visible"
+        app:layout_constraintTop_toTopOf="@id/frame"
+        app:layout_constraintBottom_toBottomOf="@id/frame"
+        app:layout_constraintStart_toStartOf="@id/frame"
+        app:layout_constraintEnd_toEndOf="@id/frame"
+        />
 
     <TextView
         android:id="@+id/timing"
