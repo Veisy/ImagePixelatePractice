@@ -11,13 +11,13 @@
         android:id="@+id/frame"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginStart="@dimen/margin_medium"
-        android:layout_marginEnd="@dimen/margin_medium"
+        android:layout_marginStart="@dimen/margin_large"
+        android:layout_marginEnd="@dimen/margin_large"
         android:background="@drawable/frame"
-        android:paddingTop="45dp"
-        android:paddingBottom="55dp"
         android:paddingStart="40dp"
+        android:paddingTop="45dp"
         android:paddingEnd="40dp"
+        android:paddingBottom="50dp"
         app:layout_constraintBottom_toTopOf="@id/guideline3"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -31,13 +31,14 @@
             android:layout_gravity="center"
             android:contentDescription="@string/image" />
 
-        <androidx.camera.view.PreviewView
-            android:id="@+id/previewView"
+        <ProgressBar
+            android:id="@+id/progresBar"
+            style="?android:attr/progressBarStyle"
+            android:visibility="gone"
             android:layout_gravity="center"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:visibility="visible"/>
     </FrameLayout>
 
     <TextView
@@ -52,14 +53,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/guideline3"
         tools:text="timing"
-        tools:visibility="visible"/>
+        tools:visibility="visible" />
 
     <View
         android:id="@+id/view_lineBetweenTimingAndWidthHeight"
         android:layout_width="2dp"
         android:layout_height="0dp"
-        android:visibility="gone"
         android:background="@color/gray_level_5"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/textInputLayout_pixelate_width"
         app:layout_constraintEnd_toEndOf="@id/guideline4"
         app:layout_constraintStart_toStartOf="@id/guideline4"
@@ -69,8 +70,8 @@
         android:id="@+id/textInputLayout_pixelate_width"
         style="@style/textInputLayoutStyle"
         android:hint="@string/width"
-        app:layout_constraintTop_toBottomOf="@id/timing"
-        app:layout_constraintEnd_toStartOf="@id/guideline4">
+        app:layout_constraintEnd_toStartOf="@id/guideline4"
+        app:layout_constraintTop_toBottomOf="@id/timing">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_pixelate_width"
@@ -82,8 +83,8 @@
         android:id="@+id/textInputLayout_pixelate_height"
         style="@style/textInputLayoutStyle"
         android:hint="@string/height"
-        app:layout_constraintTop_toBottomOf="@id/timing"
-        app:layout_constraintStart_toEndOf="@id/guideline4">
+        app:layout_constraintStart_toEndOf="@id/guideline4"
+        app:layout_constraintTop_toBottomOf="@id/timing">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_pixelate_height"
@@ -93,14 +94,13 @@
 
     <Button
         android:id="@+id/button_pixelate"
-        app:layout_constraintTop_toBottomOf="@id/textInputLayout_pixelate_width"
-        app:layout_constraintStart_toStartOf="@id/textInputLayout_pixelate_width"
-        app:layout_constraintEnd_toEndOf="@id/textInputLayout_pixelate_height"
-        android:layout_marginTop="@dimen/margin_large"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_medium"
         android:text="@string/pixelate"
-        />
+        app:layout_constraintEnd_toEndOf="@id/textInputLayout_pixelate_height"
+        app:layout_constraintStart_toStartOf="@id/textInputLayout_pixelate_width"
+        app:layout_constraintTop_toBottomOf="@id/textInputLayout_pixelate_width" />
 
     <View
         android:layout_width="2dp"
