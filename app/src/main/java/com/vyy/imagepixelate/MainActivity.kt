@@ -2,6 +2,7 @@ package com.vyy.imagepixelate
 
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -50,11 +51,25 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        checkPermissions()
         registerActivityResultCallbacks()
         setClickListeners()
 
         cameraExecutor = Executors.newSingleThreadExecutor()
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        checkPermissions()
+
+        // Default Image is Lenna.
+        imageUri = Uri.Builder()
+            .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
+            .authority(resources.getResourcePackageName(R.drawable.lenna))
+            .appendPath(resources.getResourceTypeName(R.drawable.lenna))
+            .appendPath(resources.getResourceEntryName(R.drawable.lenna))
+            .build()
+        binding.imageView.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.lenna))
     }
 
     private fun checkPermissions() {
@@ -67,28 +82,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             )
         }
     }
-
-    private fun registerActivityResultCallbacks() {
-        // Registers a photo picker activity launcher in single-select mode.
-        pickMedia =
-            registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-                // Callback is invoked after the user selects a media item or closes the
-                // photo picker.
-                if (uri != null) {
-                    Log.d(TAG, "Selected URI: $uri")
-
-                    try {
-                        imageUri = uri
-                        updateImageView(uri)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Decoding URI to Bitmap failed: ${e.message}", e)
-                    }
-                } else {
-                    Log.d(TAG, "No media selected")
-                }
-            }
-    }
-
 
     private fun setClickListeners() {
         binding.apply {
@@ -117,6 +110,27 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 else -> {}
             }
         }
+    }
+
+    private fun registerActivityResultCallbacks() {
+        // Registers a photo picker activity launcher in single-select mode.
+        pickMedia =
+            registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+                // Callback is invoked after the user selects a media item or closes the
+                // photo picker.
+                if (uri != null) {
+                    Log.d(TAG, "Selected URI: $uri")
+
+                    try {
+                        imageUri = uri
+                        updateImageView(uri)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Decoding URI to Bitmap failed: ${e.message}", e)
+                    }
+                } else {
+                    Log.d(TAG, "No media selected")
+                }
+            }
     }
 
     private fun startCamera() {
@@ -174,6 +188,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     // Take photo when camera button clicked.
     private fun takePhoto() {
+        // If camara permission is not granted, return.
+        if(!allPermissionsGranted()) {
+            return
+        }
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
         showProgressDialog(true)
@@ -237,6 +255,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
                 showProgressDialog(true)
 
+                // Since this operation takes time, we use Dispatchers.Default,
+                // which is optimized for time consuming calculations.
                 withContext(Dispatchers.Default) {
                     try {
                         val imageBitmap = uriToBitmap(uri)
