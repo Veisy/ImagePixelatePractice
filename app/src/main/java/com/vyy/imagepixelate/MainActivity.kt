@@ -23,9 +23,13 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.vyy.imagemosaicing.R
 import com.vyy.imagemosaicing.databinding.ActivityMainBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -102,12 +106,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
 
                 R.id.button_pixelate -> {
-                    pixelateBitmap()
+                    this.lifecycleScope.launch {
+                        pixelateBitmap()
+                    }
                 }
 
                 R.id.galleryButton -> {
                     pickPhoto()
                 }
+                else -> {}
             }
         }
     }
@@ -220,7 +227,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     // Decode Uri to Bitmap, and then use pixelate algorithm on the Bitmap.
-    private fun pixelateBitmap() {
+    private suspend fun pixelateBitmap() {
         imageUri?.let { uri ->
             val pixelWidth = binding.textInputEditTextPixelateWidth.text.toString()
             val pixelHeight = binding.textInputEditTextPixelateHeight.text.toString()
@@ -230,28 +237,28 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
                 showProgressDialog(true)
 
-                try {
-                    val imageBitmap = uriToBitmap(uri)
-                    // Check if pixel size is smaller then the image.
-                    if (pixelWidth.toInt() > imageBitmap.width
-                        || pixelHeight.toInt() > imageBitmap.height
-                    ) {
-                        Log.e(TAG, "Pixel size is bigger than actual image!")
-                        return
+                withContext(Dispatchers.Default) {
+                    try {
+                        val imageBitmap = uriToBitmap(uri)
+                        // Check if pixel size is smaller then the image.
+                        if (pixelWidth.toInt() < imageBitmap.width
+                            && pixelHeight.toInt() < imageBitmap.height
+                        ) {
+                            val scaledBitmap = Bitmap.createScaledBitmap(
+                                imageBitmap,
+                                pixelWidth.toInt(),
+                                pixelHeight.toInt(),
+                                false
+                            )
+                            updateImageView(scaledBitmap)
+                        } else {
+                            Log.e(TAG, "Pixel size is bigger than actual image!")
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Pixelating bitmap failed: ${e.message}", e)
+                    } finally {
+                        showProgressDialog(false)
                     }
-
-                    val scaledBitmap = Bitmap.createScaledBitmap(
-                        imageBitmap,
-                        pixelWidth.toInt(),
-                        pixelHeight.toInt(),
-                        false
-                    )
-
-                    updateImageView(scaledBitmap)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Pixelating bitmap failed: ${e.message}", e)
-                } finally {
-                    showProgressDialog(false)
                 }
             }
         }
@@ -273,15 +280,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     // Load image as Bitmap to imageView
     private fun updateImageView(bitmap: Bitmap?) {
-        binding.imageView.setImageBitmap(bitmap)
+        runOnUiThread {
+            binding.imageView.setImageBitmap(bitmap)
+        }
     }
 
     private fun showProgressDialog(isShown: Boolean) {
-        binding.apply {
-            progresBar.visibility = if (isShown) View.VISIBLE else View.GONE
-            buttonPixelate.isClickable = !isShown
-            cameraButton.isClickable = !isShown
-            galleryButton.isClickable = !isShown
+        runOnUiThread {
+            binding.apply {
+                progresBar.visibility = if (isShown) View.VISIBLE else View.GONE
+                buttonPixelate.isEnabled = !isShown
+                cameraButton.isEnabled = !isShown
+                galleryButton.isEnabled = !isShown
+            }
         }
     }
 
