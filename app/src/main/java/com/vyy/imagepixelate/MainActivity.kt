@@ -5,8 +5,8 @@ import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.graphics.ImageDecoder
+import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -140,7 +140,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
             // Set up the capture use case to allow users to take photos.
             imageCapture = ImageCapture.Builder()
-                .setTargetRotation(binding.imageView.display.rotation)
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                 .build()
 
@@ -188,8 +187,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     // Take photo when camera button clicked.
     private fun takePhoto() {
-        // If camara permission is not granted, return.
-        if(!allPermissionsGranted()) {
+        // If camera permission is not granted, return.
+        if (!allPermissionsGranted()) {
             return
         }
         // Get a stable reference of the modifiable image capture use case
@@ -264,13 +263,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         if (pixelWidth.toInt() < imageBitmap.width
                             && pixelHeight.toInt() < imageBitmap.height
                         ) {
-                            val scaledBitmap = Bitmap.createScaledBitmap(
-                                imageBitmap,
-                                pixelWidth.toInt(),
-                                pixelHeight.toInt(),
-                                false
-                            )
-                            updateImageView(scaledBitmap)
+                            if (checkIfShouldPixelate()) {
+                                val pixelatedBitmapDrawable = invokePixelation(
+                                    bitmap = imageBitmap,
+                                    pixelWidth = pixelWidth.toInt(),
+                                    pixelHeight = pixelHeight.toInt(),
+                                    resources = resources
+                                )
+                                updateImageView(pixelatedBitmapDrawable)
+                            } else {
+                                Log.e(TAG, "Not enough time has passed to re-pixate!")
+                            }
                         } else {
                             Log.e(TAG, "Pixel size is bigger than actual image!")
                         }
@@ -299,9 +302,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     // Load image as Bitmap to imageView
-    private fun updateImageView(bitmap: Bitmap?) {
+    private fun updateImageView(bitmapDrawable: BitmapDrawable) {
         runOnUiThread {
-            binding.imageView.setImageBitmap(bitmap)
+            binding.imageView.setImageDrawable(bitmapDrawable)
         }
     }
 
@@ -323,7 +326,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 contentResolver,
                 uri
             )
-        )
+        ) { decoder, _, _ ->
+            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+            decoder.isMutableRequired = true
+        }
     } else {
         @Suppress("DEPRECATION")
         MediaStore.Images.Media.getBitmap(contentResolver, uri)
