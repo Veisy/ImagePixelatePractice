@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
 
                 R.id.button_pixelate -> {
-                    this.lifecycleScope.launch {
+                    this.lifecycleScope.launch(Dispatchers.Main) {
                         pixelateBitmap()
                     }
                 }
@@ -129,12 +129,32 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         updateImageView(uri)
                         imageUri?.let { checkIfGrayScale(it) }
                     } catch (e: Exception) {
-                        Log.e(TAG, "Decoding URI to Bitmap failed: ${e.message}", e)
+                        Log.e(TAG, "Picking image from media failed: ${e.message}", e)
                     }
                 } else {
                     Log.d(TAG, "No media selected")
                 }
             }
+    }
+
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(
+            baseContext, it
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_PERMISSIONS && (grantResults.isNotEmpty() &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED)
+        ) {
+            // Camera permission is granted, start camera.
+            startCamera()
+        }
     }
 
     private fun startCamera() {
@@ -157,36 +177,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
                 // Bind use cases to camera
                 cameraProvider.bindToLifecycle(
-                    this, cameraSelector, imageCapture
+                    this as LifecycleOwner, cameraSelector, imageCapture
                 )
 
             } catch (exc: Exception) {
-                Log.e(TAG, "Use case binding failed", exc)
+                Log.e(TAG, "Camera use case binding failed", exc)
             }
-
-            cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, imageCapture)
-
         }, ContextCompat.getMainExecutor(this))
-    }
-
-    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(
-            baseContext, it
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    // TODO: Update permission request
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_PERMISSIONS && (grantResults.isNotEmpty() &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED)
-        ) {
-            startCamera()
-        }
     }
 
     // Take photo when camera button clicked.
@@ -226,24 +223,29 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
-                    showProgressDialog(false)
+                    runOnUiThread {
+                        showProgressDialog(false)
+                    }
                 }
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     try {
+                        // Photo taken from the Camera,
+                        // show it in ImageView.
                         imageUri = outputFileResults.savedUri
                         runOnUiThread {
                             updateImageView(imageUri)
                         }
+
+                        // Check if image is grayscale.
                         imageUri?.let { checkIfGrayScale(it) }
                     } catch (e: Exception) {
-                        Log.e(TAG, "Converting ImageProxy to Bitmap failed: ${e.message}", e)
+                        Log.e(TAG, "Loading image uri to ImageView failed: ${e.message}", e)
                     } finally {
                         runOnUiThread {
                             showProgressDialog(false)
                         }
                     }
-
                 }
             })
     }
@@ -259,10 +261,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
                 showProgressDialog(true)
 
-                // Since this operation takes time, we use Dispatchers.Default,
-                // which is optimized for time consuming calculations.
-                withContext(Dispatchers.Default) {
-                    try {
+                try {
+                    // Since this operation takes time, we use Dispatchers.Default,
+                    // which is optimized for time consuming calculations.
+                    withContext(Dispatchers.Default) {
                         val imageBitmap = uriToBitmap(uri)
                         // Check if pixel size is smaller then the image.
                         if (pixelWidth.toInt() < imageBitmap.width
@@ -275,18 +277,23 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                     pixelHeight = pixelHeight.toInt(),
                                     resources = resources
                                 )
-                                updateImageView(pixelatedBitmapDrawable)
+
+                                // Since we are doing UI operations at this line,
+                                // we return back to Main Dispatcher.
+                                withContext(Dispatchers.Main) {
+                                    updateImageView(pixelatedBitmapDrawable)
+                                }
                             } else {
                                 Log.e(TAG, "Not enough time has passed to re-pixate!")
                             }
                         } else {
                             Log.e(TAG, "Pixel size is bigger than actual image!")
                         }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Pixelating bitmap failed: ${e.message}", e)
-                    } finally {
-                        showProgressDialog(false)
                     }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Pixelating bitmap failed: ${e.message}", e)
+                } finally {
+                    showProgressDialog(false)
                 }
             }
         }
@@ -296,16 +303,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         pickMedia?.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
 
-    // Load image as Uri to imageView
+    // Load image to imageView
     private fun updateImageView(image: Any?) {
         if (image is Uri || image is BitmapDrawable) {
-            runOnUiThread {
-                image.let {
-                    Glide
-                        .with(this)
-                        .load(it)
-                        .into(binding.imageView)
-                }
+            image.let {
+                Glide
+                    .with(this)
+                    .load(it)
+                    .into(binding.imageView)
             }
         }
     }
@@ -316,7 +321,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 val bitmap = uriToBitmap(uri)
                 val isGrayScale = isGrayScale(bitmap)
 
-                runOnUiThread {
+                withContext(Dispatchers.Main) {
                     binding.apply {
                         textViewGrayScale.visibility = if (isGrayScale) View.VISIBLE else View.GONE
                         textViewRgb.visibility = if (!isGrayScale) View.VISIBLE else View.GONE
@@ -334,17 +339,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun showProgressDialog(isShown: Boolean) {
-        runOnUiThread {
-            binding.apply {
-                progresBar.visibility = if (isShown) View.VISIBLE else View.GONE
-                buttonPixelate.isEnabled = !isShown
-                cameraButton.isEnabled = !isShown
-                galleryButton.isEnabled = !isShown
-            }
+        binding.apply {
+            progresBar.visibility = if (isShown) View.VISIBLE else View.GONE
+            buttonPixelate.isEnabled = !isShown
+            cameraButton.isEnabled = !isShown
+            galleryButton.isEnabled = !isShown
         }
     }
 
-    // Decode image uri to Bitmap
+    // Decode image Uri to Bitmap
     private fun uriToBitmap(uri: Uri) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
         ImageDecoder.decodeBitmap(
             ImageDecoder.createSource(
