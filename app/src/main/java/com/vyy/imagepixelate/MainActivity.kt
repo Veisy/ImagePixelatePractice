@@ -312,13 +312,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun checkIfGrayScale(uri: Uri) {
         this.lifecycleScope.launch {
-            val bitmap = uriToBitmap(uri)
-            val isGrayScale = isGrayScale(bitmap)
+            withContext(Dispatchers.Default) {
+                val bitmap = uriToBitmap(uri)
+                val isGrayScale = isGrayScale(bitmap)
 
-            runOnUiThread {
-                binding.apply {
-                    textViewGrayScale.visibility = if (isGrayScale) View.VISIBLE else View.GONE
-                    textViewRgb.visibility = if (!isGrayScale) View.VISIBLE else View.GONE
+                runOnUiThread {
+                    binding.apply {
+                        textViewGrayScale.visibility = if (isGrayScale) View.VISIBLE else View.GONE
+                        textViewRgb.visibility = if (!isGrayScale) View.VISIBLE else View.GONE
+                    }
                 }
             }
         }
