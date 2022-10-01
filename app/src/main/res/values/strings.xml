@@ -5,4 +5,6 @@
     <string name="width">Width</string>
     <string name="height">Height</string>
     <string name="pixelate">PIXELATE</string>
+    <string name="gray">GRAY</string>
+    <string name="rgb"><font color='red'>R</font><font color='green'>G</font><font color='blue'>B</font></string>
 </resources>

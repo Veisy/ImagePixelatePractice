@@ -35,15 +35,14 @@
     <ProgressBar
         android:id="@+id/progresBar"
         style="?android:attr/progressBarStyle"
-        android:visibility="gone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:visibility="visible"
-        app:layout_constraintTop_toTopOf="@id/frame"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/frame"
-        app:layout_constraintStart_toStartOf="@id/frame"
         app:layout_constraintEnd_toEndOf="@id/frame"
-        />
+        app:layout_constraintStart_toStartOf="@id/frame"
+        app:layout_constraintTop_toTopOf="@id/frame"
+        tools:visibility="visible" />
 
     <TextView
         android:id="@+id/timing"
@@ -165,4 +164,28 @@
             android:background="@drawable/ic_capture_videocam"
             app:backgroundTint="@color/white" />
     </FrameLayout>
+
+    <TextView
+        android:id="@+id/textView_grayScale"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_large"
+        android:text="@string/gray"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline3"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/textView_rgb"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/margin_large"
+        android:text="@string/rgb"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline3"
+        tools:visibility="visible" />
 </androidx.constraintlayout.widget.ConstraintLayout>

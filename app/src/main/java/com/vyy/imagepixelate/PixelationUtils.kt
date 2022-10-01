@@ -83,3 +83,16 @@ fun invokePixelation(
 
     return BitmapDrawable(resources, mPixelatedBitmap)
 }
+
+// Check if image is gray scale
+fun isGrayScale(bitmap: Bitmap): Boolean {
+    for (y in 0 until bitmap.height) {
+        for (x in 0 until bitmap.width) {
+            val pixel = bitmap.getPixel(x, y)
+            if(Color.red(pixel) != Color.green(pixel) || Color.red(pixel) != Color.green(pixel)) {
+                return false
+            }
+        }
+    }
+    return true
+}

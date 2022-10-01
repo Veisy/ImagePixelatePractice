@@ -69,7 +69,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             .appendPath(resources.getResourceTypeName(R.drawable.lenna))
             .appendPath(resources.getResourceEntryName(R.drawable.lenna))
             .build()
-        binding.imageView.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.lenna))
+        updateImageView(imageUri)
     }
 
     private fun checkPermissions() {
@@ -95,6 +95,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         v?.let {
             when (v.id) {
                 R.id.cameraButton -> {
+                    hideGrayAndRgbTextView()
                     takePhoto()
                 }
 
@@ -105,12 +106,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
 
                 R.id.galleryButton -> {
+                    hideGrayAndRgbTextView()
                     pickPhoto()
                 }
                 else -> {}
             }
         }
     }
+
 
     private fun registerActivityResultCallbacks() {
         // Registers a photo picker activity launcher in single-select mode.
@@ -124,6 +127,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     try {
                         imageUri = uri
                         updateImageView(uri)
+                        imageUri?.let { checkIfGrayScale(it) }
                     } catch (e: Exception) {
                         Log.e(TAG, "Decoding URI to Bitmap failed: ${e.message}", e)
                     }
@@ -231,6 +235,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         runOnUiThread {
                             updateImageView(imageUri)
                         }
+                        imageUri?.let { checkIfGrayScale(it) }
                     } catch (e: Exception) {
                         Log.e(TAG, "Converting ImageProxy to Bitmap failed: ${e.message}", e)
                     } finally {
@@ -292,19 +297,37 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     // Load image as Uri to imageView
-    private fun updateImageView(uri: Uri?) {
-        uri.let {
-            Glide
-                .with(this)
-                .load(it)
-                .into(binding.imageView)
+    private fun updateImageView(image: Any?) {
+        if (image is Uri || image is BitmapDrawable) {
+            runOnUiThread {
+                image.let {
+                    Glide
+                        .with(this)
+                        .load(it)
+                        .into(binding.imageView)
+                }
+            }
         }
     }
 
-    // Load image as Bitmap to imageView
-    private fun updateImageView(bitmapDrawable: BitmapDrawable) {
-        runOnUiThread {
-            binding.imageView.setImageDrawable(bitmapDrawable)
+    private fun checkIfGrayScale(uri: Uri) {
+        this.lifecycleScope.launch {
+            val bitmap = uriToBitmap(uri)
+            val isGrayScale = isGrayScale(bitmap)
+
+            runOnUiThread {
+                binding.apply {
+                    textViewGrayScale.visibility = if (isGrayScale) View.VISIBLE else View.GONE
+                    textViewRgb.visibility = if (!isGrayScale) View.VISIBLE else View.GONE
+                }
+            }
+        }
+    }
+
+    private fun hideGrayAndRgbTextView() {
+        binding.apply {
+            textViewGrayScale.visibility = View.GONE
+            textViewRgb.visibility = View.GONE
         }
     }
 
