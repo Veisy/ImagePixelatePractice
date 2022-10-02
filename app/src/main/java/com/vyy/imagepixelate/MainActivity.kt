@@ -70,6 +70,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             .appendPath(resources.getResourceEntryName(R.drawable.lenna))
             .build()
         updateImageView(imageUri)
+        hideGrayAndRgbTextView()
     }
 
     private fun checkPermissions() {
