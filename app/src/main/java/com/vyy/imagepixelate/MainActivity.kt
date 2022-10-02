@@ -29,6 +29,7 @@ import com.bumptech.glide.Glide
 import com.vyy.imagemosaicing.R
 import com.vyy.imagemosaicing.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -44,6 +45,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var imageCapture: ImageCapture? = null
     private var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>? = null
     private var imageUri: Uri? = null
+
+    private var pixelationJob: Job? = null
+    private var grayScaleJob: Job? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -96,23 +100,30 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         v?.let {
             when (v.id) {
                 R.id.cameraButton -> {
+                    cancelCurrentJobs()
                     hideGrayAndRgbTextView()
                     takePhoto()
                 }
 
                 R.id.button_pixelate -> {
-                    this.lifecycleScope.launch(Dispatchers.Main) {
+                    pixelationJob = this.lifecycleScope.launch(Dispatchers.Main) {
                         pixelateBitmap()
                     }
                 }
 
                 R.id.galleryButton -> {
+                    cancelCurrentJobs()
                     hideGrayAndRgbTextView()
                     pickPhoto()
                 }
                 else -> {}
             }
         }
+    }
+
+    private fun cancelCurrentJobs() {
+        pixelationJob?.cancel()
+        grayScaleJob?.cancel()
     }
 
 
@@ -317,7 +328,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun checkIfGrayScale(uri: Uri) {
-        this.lifecycleScope.launch {
+        grayScaleJob = this.lifecycleScope.launch {
             withContext(Dispatchers.Default) {
                 val bitmap = uriToBitmap(uri)
                 val isGrayScale = isGrayScale(bitmap)
