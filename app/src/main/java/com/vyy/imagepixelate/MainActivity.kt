@@ -278,28 +278,22 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     // which is optimized for time consuming calculations.
                     withContext(Dispatchers.Default) {
                         val imageBitmap = uriToBitmap(uri)
-                        // Check if pixel size is smaller then the image.
-                        if (pixelWidth.toInt() < imageBitmap.width
-                            && pixelHeight.toInt() < imageBitmap.height
-                        ) {
-                            if (checkIfShouldPixelate()) {
-                                val pixelatedBitmapDrawable = invokePixelation(
-                                    bitmap = imageBitmap,
-                                    pixelWidth = pixelWidth.toInt(),
-                                    pixelHeight = pixelHeight.toInt(),
-                                    resources = resources
-                                )
 
-                                // Since we are doing UI operations at this line,
-                                // we return back to Main Dispatcher.
-                                withContext(Dispatchers.Main) {
-                                    updateImageView(pixelatedBitmapDrawable)
-                                }
-                            } else {
-                                Log.e(TAG, "Not enough time has passed to re-pixate!")
+                        if (checkIfShouldPixelate()) {
+                            val pixelatedBitmapDrawable = invokePixelation(
+                                bitmap = imageBitmap,
+                                pixelWidth = pixelWidth.toInt().coerceAtMost(imageBitmap.width),
+                                pixelHeight = pixelHeight.toInt().coerceAtMost(imageBitmap.height),
+                                resources = resources
+                            )
+
+                            // Since we are doing UI operations at this line,
+                            // we return back to Main Dispatcher.
+                            withContext(Dispatchers.Main) {
+                                updateImageView(pixelatedBitmapDrawable)
                             }
                         } else {
-                            Log.e(TAG, "Pixel size is bigger than actual image!")
+                            Log.e(TAG, "Not enough time has passed to re-pixate!")
                         }
                     }
                 } catch (e: Exception) {

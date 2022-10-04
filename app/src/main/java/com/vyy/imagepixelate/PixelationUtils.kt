@@ -111,7 +111,7 @@ fun isGrayScale(bitmap: Bitmap): Boolean {
             val pixel = bitmap.getPixel(x, y)
 
             // If there is even a single RGB pixel, the picture is not RGB.
-            if(Color.red(pixel) != Color.green(pixel) || Color.red(pixel) != Color.green(pixel)) {
+            if(Color.red(pixel) != Color.green(pixel) || Color.red(pixel) != Color.blue(pixel)) {
                 return false
             }
         }
