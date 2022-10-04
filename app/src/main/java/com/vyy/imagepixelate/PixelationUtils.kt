@@ -118,3 +118,19 @@ fun isGrayScale(bitmap: Bitmap): Boolean {
     }
     return true
 }
+
+// Convert image to gray scale
+fun convertToGrayScale(bitmap: Bitmap, resources: Resources): BitmapDrawable {
+    val width = bitmap.width
+    val height = bitmap.height
+    val grayScaleBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+    for (y in 0 until height) {
+        for (x in 0 until width) {
+            val pixel = bitmap.getPixel(x, y)
+            val grayScale = (Color.red(pixel) + Color.green(pixel) + Color.blue(pixel)) / 3
+            grayScaleBitmap.setPixel(x, y, Color.rgb(grayScale, grayScale, grayScale))
+        }
+    }
+    return BitmapDrawable(resources, grayScaleBitmap)
+}

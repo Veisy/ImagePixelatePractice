@@ -47,7 +47,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var imageUri: Uri? = null
 
     private var pixelationJob: Job? = null
-    private var grayScaleJob: Job? = null
+    private var convertToGrayScaleJob: Job? = null
+    private var checkGrayScaleJob: Job? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,6 +94,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             cameraButton.setOnClickListener(this@MainActivity)
             buttonPixelate.setOnClickListener(this@MainActivity)
             galleryButton.setOnClickListener(this@MainActivity)
+            textViewRgb.setOnClickListener(this@MainActivity)
         }
     }
 
@@ -106,6 +108,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
 
                 R.id.button_pixelate -> {
+                    cancelCurrentJobs()
+                    hideGrayAndRgbTextView()
                     pixelationJob = this.lifecycleScope.launch(Dispatchers.Main) {
                         pixelateBitmap()
                     }
@@ -116,6 +120,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     hideGrayAndRgbTextView()
                     pickPhoto()
                 }
+
+                R.id.textView_rgb-> {
+                    cancelCurrentJobs()
+                    convertToGrayScaleJob = this.lifecycleScope.launch(Dispatchers.Main) {
+                        convertToGrayScale()
+                    }
+                }
                 else -> {}
             }
         }
@@ -123,7 +134,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun cancelCurrentJobs() {
         pixelationJob?.cancel()
-        grayScaleJob?.cancel()
+        convertToGrayScaleJob?.cancel()
+        checkGrayScaleJob?.cancel()
     }
 
 
@@ -321,8 +333,39 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private suspend fun convertToGrayScale() {
+        imageUri?.let { uri ->
+            showProgressDialog(true)
+
+            try {
+                withContext(Dispatchers.Default) {
+                    val imageBitmap = uriToBitmap(uri)
+                    val grayScaleBitmapDrawable = convertToGrayScale(
+                        bitmap = imageBitmap,
+                        resources = resources
+                    )
+
+                    // Since we are doing UI operations at this line,
+                    // we return back to Main Dispatcher.
+                    withContext(Dispatchers.Main) {
+                        updateImageView(grayScaleBitmapDrawable)
+                        binding.apply {
+                            textViewRgb.visibility = View.GONE
+                            textViewGrayScale.visibility = View.VISIBLE
+                        }
+                    }
+
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Converting image to gray scale failed: ${e.message}", e)
+            } finally {
+                showProgressDialog(false)
+            }
+        }
+    }
+
     private fun checkIfGrayScale(uri: Uri) {
-        grayScaleJob = this.lifecycleScope.launch {
+        checkGrayScaleJob = this.lifecycleScope.launch {
             withContext(Dispatchers.Default) {
                 val bitmap = uriToBitmap(uri)
                 val isGrayScale = isGrayScale(bitmap)
@@ -347,9 +390,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private fun showProgressDialog(isShown: Boolean) {
         binding.apply {
             progresBar.visibility = if (isShown) View.VISIBLE else View.GONE
-            buttonPixelate.isEnabled = !isShown
-            cameraButton.isEnabled = !isShown
-            galleryButton.isEnabled = !isShown
+            val clickableViews = listOf(buttonPixelate, cameraButton, galleryButton, textViewRgb)
+            clickableViews.forEach { it.isEnabled = !isShown }
         }
     }
 
