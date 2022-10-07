@@ -10,7 +10,7 @@
     <uses-feature android:name="android.hardware.camera" />
 
     <application
-        android:name="com.vyy.imagepixelate.ImagePixelateApplication"
+        android:name="com.vyy.imageprocessingpractice.ImageProcessingPracticeApplication"
         android:allowBackup="true"
         android:configChanges="orientation|keyboardHidden"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -23,7 +23,7 @@
         android:theme="@style/Theme.ImagePixelatePractice"
         tools:targetApi="33">
         <activity
-            android:name="com.vyy.imagepixelate.MainActivity"
+            android:name="com.vyy.imageprocessingpractice.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

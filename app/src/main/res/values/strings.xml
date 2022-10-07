@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ImagePixelatePractice</string>
+    <string name="app_name">ImageProcessingPractice</string>
     <string name="image">Image</string>
     <string name="video">Video</string>
     <string name="width">Width</string>

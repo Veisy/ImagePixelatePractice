@@ -1,4 +1,4 @@
-package com.vyy.imagepixelate
+package com.vyy.imageprocessingpractice
 
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE

@@ -1,4 +1,4 @@
-package com.vyy.imagepixelate
+package com.vyy.imageprocessingpractice
 
 import org.junit.Test
 
