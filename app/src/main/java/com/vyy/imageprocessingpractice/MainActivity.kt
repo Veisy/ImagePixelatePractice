@@ -78,7 +78,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             .appendPath(resources.getResourceEntryName(R.drawable.lenna))
             .build()
         updateImageView(imageUri)
-        imageUri?.let { uriToBitmap(it) }
         hideGrayAndRgbTextView()
 
         imageUriToBitmapDeferred = this.lifecycleScope.async(Dispatchers.Default) {
