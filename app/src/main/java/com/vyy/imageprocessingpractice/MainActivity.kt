@@ -28,6 +28,9 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.vyy.imagemosaicing.R
 import com.vyy.imagemosaicing.databinding.ActivityMainBinding
+import com.vyy.imageprocessingpractice.utils.checkIfShouldPixelate
+import com.vyy.imageprocessingpractice.utils.invokePixelation
+import com.vyy.imageprocessingpractice.utils.isGrayScale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -340,10 +343,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             try {
                 withContext(Dispatchers.Default) {
                     val imageBitmap = uriToBitmap(uri)
-                    val grayScaleBitmapDrawable = convertToGrayScale(
-                        bitmap = imageBitmap,
-                        resources = resources
-                    )
+                    val grayScaleBitmapDrawable =
+                        com.vyy.imageprocessingpractice.utils.convertToGrayScale(
+                            bitmap = imageBitmap,
+                            resources = resources
+                        )
 
                     // Since we are doing UI operations at this line,
                     // we return back to Main Dispatcher.

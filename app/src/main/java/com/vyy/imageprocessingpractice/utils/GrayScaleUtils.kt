@@ -1,4 +1,4 @@
-package com.vyy.imageprocessingpractice
+package com.vyy.imageprocessingpractice.utils
 
 import android.content.res.Resources
 import android.graphics.Bitmap
