@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginStart="@dimen/margin_large"
+        android:layout_marginTop="@dimen/margin_medium"
         android:layout_marginEnd="@dimen/margin_large"
         android:background="@drawable/frame"
         android:paddingStart="40dp"
@@ -45,36 +46,48 @@
         tools:visibility="visible" />
 
     <TextView
-        android:id="@+id/timing"
-        style="@style/TextViewStyle"
+        android:id="@+id/textView_grayScale"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_large"
+        android:layout_marginTop="@dimen/margin_medium"
+        android:text="@string/gray"
+        android:textStyle="bold"
         android:visibility="gone"
-        app:drawableStartCompat="@drawable/ic_timing"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/guideline3"
-        tools:text="timing"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/textView_rgb"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_medium"
+        android:layout_marginEnd="@dimen/margin_large"
+        android:text="@string/rgb"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         tools:visibility="visible" />
 
     <View
-        android:id="@+id/view_lineBetweenTimingAndWidthHeight"
-        android:layout_width="2dp"
-        android:layout_height="0dp"
-        android:background="@color/gray_level_5"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/textInputLayout_pixelate_width"
-        app:layout_constraintEnd_toEndOf="@id/guideline4"
-        app:layout_constraintStart_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/timing" />
+        android:id="@+id/view_separatorLine"
+        android:layout_width="0dp"
+        android:layout_height="5dp"
+        android:layout_marginTop="@dimen/margin_large"
+        android:background="@drawable/shadow_background"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="@id/frame"
+        app:layout_constraintStart_toStartOf="@id/frame"
+        app:layout_constraintTop_toBottomOf="@id/cameraButton_frame" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/textInputLayout_pixelate_width"
         style="@style/textInputLayoutStyle"
         android:hint="@string/width"
         app:layout_constraintEnd_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/timing">
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_pixelate_width"
@@ -87,7 +100,7 @@
         style="@style/textInputLayoutStyle"
         android:hint="@string/height"
         app:layout_constraintStart_toEndOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/timing">
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_pixelate_height"
@@ -104,6 +117,15 @@
         app:layout_constraintEnd_toEndOf="@id/textInputLayout_pixelate_height"
         app:layout_constraintStart_toStartOf="@id/textInputLayout_pixelate_width"
         app:layout_constraintTop_toBottomOf="@id/textInputLayout_pixelate_width" />
+
+    <View
+        android:layout_width="2dp"
+        android:layout_height="0dp"
+        android:background="@color/gray_level_5"
+        app:layout_constraintBottom_toTopOf="@id/textInputLayout_pixelate_width"
+        app:layout_constraintEnd_toEndOf="@id/guideline4"
+        app:layout_constraintStart_toStartOf="@id/guideline4"
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine" />
 
     <View
         android:layout_width="2dp"
@@ -133,11 +155,11 @@
         android:id="@+id/galleryButton_frame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/margin_xxx_large"
         android:background="@drawable/button_gallery_background"
         android:padding="@dimen/padding_medium"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/button_pixelate">
+        app:layout_constraintTop_toBottomOf="@id/guideline3">
 
         <Button
             android:id="@+id/galleryButton"
@@ -151,11 +173,11 @@
         android:id="@+id/cameraButton_frame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/margin_xxx_large"
         android:background="@drawable/button_camera_background"
         android:padding="@dimen/padding_medium"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/button_pixelate">
+        app:layout_constraintTop_toBottomOf="@id/guideline3">
 
         <Button
             android:id="@+id/cameraButton"
@@ -166,26 +188,17 @@
     </FrameLayout>
 
     <TextView
-        android:id="@+id/textView_grayScale"
+        android:id="@+id/timing"
+        style="@style/TextViewStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/margin_large"
-        android:text="@string/gray"
-        android:textStyle="bold"
+        android:layout_marginTop="@dimen/margin_large"
         android:visibility="gone"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guideline3"
-        tools:visibility="visible" />
-
-    <TextView
-        android:id="@+id/textView_rgb"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/margin_large"
-        android:text="@string/rgb"
-        android:textStyle="bold"
-        android:visibility="gone"
+        app:drawableStartCompat="@drawable/ic_timing"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guideline3"
+        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/button_pixelate"
+        tools:text="timing"
         tools:visibility="visible" />
 </androidx.constraintlayout.widget.ConstraintLayout>
