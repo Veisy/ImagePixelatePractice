@@ -1,5 +1,5 @@
-# ImagePixelatePractice
-An Android project in Kotlin where custom pixelation algorithm and gray scale control algorithm are studied. 
+# ImageProcessingPractice
+An Android project in Kotlin where image processing algorithms are studied. 
 Optimiza works, but the code may seem complicated because it does not have an architectural structure at the moment (All the codes except algorithms are in MainActivity). 
 Apart from that, the latest Android pratics were used.
 
