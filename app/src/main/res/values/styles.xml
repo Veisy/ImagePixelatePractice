@@ -26,7 +26,7 @@
         <item name="android:inputType">numberDecimal</item>
         <item name="android:maxLength">4</item>
         <item name="android:singleLine">true</item>
-        <item name="android:textSize">@dimen/textSize_large</item>
+        <item name="android:textSize">@dimen/textSize_medium</item>
         <item name="android:textColor">@color/colorPrimary</item>
         <item name="android:textStyle">bold</item>
     </style>
