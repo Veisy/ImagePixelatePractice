@@ -5,6 +5,7 @@ import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
@@ -31,10 +32,7 @@ import com.vyy.imagemosaicing.databinding.ActivityMainBinding
 import com.vyy.imageprocessingpractice.utils.checkIfShouldPixelate
 import com.vyy.imageprocessingpractice.utils.invokePixelation
 import com.vyy.imageprocessingpractice.utils.isGrayScale
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -48,10 +46,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var imageCapture: ImageCapture? = null
     private var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>? = null
     private var imageUri: Uri? = null
+    private var imageBitmap: Bitmap? = null
 
     private var pixelationJob: Job? = null
     private var convertToGrayScaleJob: Job? = null
     private var checkGrayScaleJob: Job? = null
+    private var imageUriToBitmapDeferred: Deferred<Bitmap?>? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,7 +78,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             .appendPath(resources.getResourceEntryName(R.drawable.lenna))
             .build()
         updateImageView(imageUri)
+        imageUri?.let { uriToBitmap(it) }
         hideGrayAndRgbTextView()
+
+        imageUriToBitmapDeferred = this.lifecycleScope.async(Dispatchers.Default) {
+            imageUri?.let { uriToBitmap(it) }
+        }
     }
 
     private fun checkPermissions() {
@@ -111,10 +116,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
 
                 R.id.button_pixelate -> {
-                    cancelCurrentJobs()
-                    hideGrayAndRgbTextView()
-                    pixelationJob = this.lifecycleScope.launch(Dispatchers.Main) {
-                        pixelateBitmap()
+                    val pixelWidth = binding.textInputEditTextPixelateWidth.text.toString()
+                    val pixelHeight = binding.textInputEditTextPixelateHeight.text.toString()
+                    if (pixelWidth.isNotEmpty() && pixelHeight.isNotEmpty()
+                        && pixelWidth.toInt() > 0 && pixelHeight.toInt() > 0
+                    ) {
+                        cancelCurrentJobs(
+                            isCheckGrayScaleJobCanceled = false,
+                            isImageUriToBitmapCanceled = false
+                        )
+
+                        pixelationJob = this.lifecycleScope.launch(Dispatchers.Main) {
+                            pixelateBitmap(pixelWidth.toInt(), pixelHeight.toInt())
+                        }
                     }
                 }
 
@@ -124,8 +138,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     pickPhoto()
                 }
 
-                R.id.textView_rgb-> {
-                    cancelCurrentJobs()
+                R.id.textView_rgb -> {
+                    cancelCurrentJobs(isImageUriToBitmapCanceled = false)
                     convertToGrayScaleJob = this.lifecycleScope.launch(Dispatchers.Main) {
                         convertToGrayScale()
                     }
@@ -135,10 +149,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun cancelCurrentJobs() {
-        pixelationJob?.cancel()
-        convertToGrayScaleJob?.cancel()
-        checkGrayScaleJob?.cancel()
+    private fun cancelCurrentJobs(
+        isPixelationCanceled: Boolean = true,
+        isConvertToGrayScaleCanceled: Boolean = true,
+        isCheckGrayScaleJobCanceled: Boolean = true,
+        isImageUriToBitmapCanceled: Boolean = true
+    ) {
+        if (isPixelationCanceled) pixelationJob?.cancel()
+        if (isConvertToGrayScaleCanceled) convertToGrayScaleJob?.cancel()
+        if (isCheckGrayScaleJobCanceled) checkGrayScaleJob?.cancel()
+        if (isImageUriToBitmapCanceled) imageUriToBitmapDeferred?.cancel()
     }
 
 
@@ -150,11 +170,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 // photo picker.
                 if (uri != null) {
                     Log.d(TAG, "Selected URI: $uri")
-
                     try {
                         imageUri = uri
                         updateImageView(uri)
-                        imageUri?.let { checkIfGrayScale(it) }
+
+                        imageUriToBitmapDeferred = this.lifecycleScope.async(Dispatchers.Default) {
+                            imageUri?.let { uriToBitmap(it) }
+                        }
+
+                        checkIfGrayScale()
                     } catch (e: Exception) {
                         Log.e(TAG, "Picking image from media failed: ${e.message}", e)
                     }
@@ -264,8 +288,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                             updateImageView(imageUri)
                         }
 
+                        imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
+                            imageUri?.let { uriToBitmap(it) }
+                        }
+
                         // Check if image is grayscale.
-                        imageUri?.let { checkIfGrayScale(it) }
+                        checkIfGrayScale()
                     } catch (e: Exception) {
                         Log.e(TAG, "Loading image uri to ImageView failed: ${e.message}", e)
                     } finally {
@@ -278,45 +306,38 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     // Decode Uri to Bitmap, and then use pixelate algorithm on the Bitmap.
-    private suspend fun pixelateBitmap() {
-        imageUri?.let { uri ->
-            val pixelWidth = binding.textInputEditTextPixelateWidth.text.toString()
-            val pixelHeight = binding.textInputEditTextPixelateHeight.text.toString()
-            if (pixelWidth.isNotEmpty() && pixelHeight.isNotEmpty()
-                && pixelWidth.toInt() > 0 && pixelHeight.toInt() > 0
-            ) {
+    private suspend fun pixelateBitmap(width: Int, height: Int) {
+        try {
+            showProgressDialog(true)
+            imageBitmap = imageUriToBitmapDeferred?.await()
 
-                showProgressDialog(true)
+            // Since this operation takes time, we use Dispatchers.Default,
+            // which is optimized for time consuming calculations.
+            withContext(Dispatchers.Default) {
+                if (checkIfShouldPixelate() && imageBitmap != null) {
+                    val pixelatedBitmapDrawable = invokePixelation(
+                        bitmap = imageBitmap!!,
+                        pixelWidth = width.coerceAtMost(imageBitmap!!.width),
+                        pixelHeight = height.coerceAtMost(imageBitmap!!.height),
+                        resources = resources
+                    )
 
-                try {
-                    // Since this operation takes time, we use Dispatchers.Default,
-                    // which is optimized for time consuming calculations.
-                    withContext(Dispatchers.Default) {
-                        val imageBitmap = uriToBitmap(uri)
-
-                        if (checkIfShouldPixelate()) {
-                            val pixelatedBitmapDrawable = invokePixelation(
-                                bitmap = imageBitmap,
-                                pixelWidth = pixelWidth.toInt().coerceAtMost(imageBitmap.width),
-                                pixelHeight = pixelHeight.toInt().coerceAtMost(imageBitmap.height),
-                                resources = resources
-                            )
-
-                            // Since we are doing UI operations at this line,
-                            // we return back to Main Dispatcher.
-                            withContext(Dispatchers.Main) {
-                                updateImageView(pixelatedBitmapDrawable)
-                            }
-                        } else {
-                            Log.e(TAG, "Not enough time has passed to re-pixate!")
-                        }
+                    // Since we are doing UI operations at this line,
+                    // we return back to Main Dispatcher.
+                    withContext(Dispatchers.Main) {
+                        updateImageView(pixelatedBitmapDrawable)
                     }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Pixelating bitmap failed: ${e.message}", e)
-                } finally {
-                    showProgressDialog(false)
+                } else {
+                    Log.e(
+                        TAG,
+                        "Not enough time has passed to re-pixate, or ImageBitmap is null."
+                    )
                 }
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Pixelating bitmap failed: ${e.message}", e)
+        } finally {
+            showProgressDialog(false)
         }
     }
 
@@ -337,17 +358,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private suspend fun convertToGrayScale() {
-        imageUri?.let { uri ->
+        try {
             showProgressDialog(true)
+            imageBitmap = imageUriToBitmapDeferred?.await()
 
-            try {
+            if (imageBitmap != null) {
                 withContext(Dispatchers.Default) {
-                    val imageBitmap = uriToBitmap(uri)
                     val grayScaleBitmapDrawable =
                         com.vyy.imageprocessingpractice.utils.convertToGrayScale(
-                            bitmap = imageBitmap,
+                            bitmap = imageBitmap!!,
                             resources = resources
                         )
+
+                    imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
+                        grayScaleBitmapDrawable.bitmap
+                    }
 
                     // Since we are doing UI operations at this line,
                     // we return back to Main Dispatcher.
@@ -358,26 +383,28 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                             textViewGrayScale.visibility = View.VISIBLE
                         }
                     }
-
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Converting image to gray scale failed: ${e.message}", e)
-            } finally {
-                showProgressDialog(false)
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Converting image to gray scale failed: ${e.message}", e)
+        } finally {
+            showProgressDialog(false)
         }
     }
 
-    private fun checkIfGrayScale(uri: Uri) {
+    private fun checkIfGrayScale() {
         checkGrayScaleJob = this.lifecycleScope.launch {
-            withContext(Dispatchers.Default) {
-                val bitmap = uriToBitmap(uri)
-                val isGrayScale = isGrayScale(bitmap)
+            imageBitmap = imageUriToBitmapDeferred?.await()
+            imageBitmap?.let { bitmap ->
+                withContext(Dispatchers.Default) {
+                    val isGrayScale = isGrayScale(bitmap)
 
-                withContext(Dispatchers.Main) {
-                    binding.apply {
-                        textViewGrayScale.visibility = if (isGrayScale) View.VISIBLE else View.GONE
-                        textViewRgb.visibility = if (!isGrayScale) View.VISIBLE else View.GONE
+                    withContext(Dispatchers.Main) {
+                        binding.apply {
+                            textViewGrayScale.visibility =
+                                if (isGrayScale) View.VISIBLE else View.GONE
+                            textViewRgb.visibility = if (!isGrayScale) View.VISIBLE else View.GONE
+                        }
                     }
                 }
             }
