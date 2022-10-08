@@ -29,9 +29,7 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.vyy.imagemosaicing.R
 import com.vyy.imagemosaicing.databinding.ActivityMainBinding
-import com.vyy.imageprocessingpractice.utils.checkIfShouldPixelate
-import com.vyy.imageprocessingpractice.utils.invokePixelation
-import com.vyy.imageprocessingpractice.utils.isGrayScale
+import com.vyy.imageprocessingpractice.utils.*
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -115,19 +113,22 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
 
                 R.id.button_pixelate -> {
-                    val pixelWidth = binding.textInputEditTextPixelateWidth.text.toString()
-                    val pixelHeight = binding.textInputEditTextPixelateHeight.text.toString()
-                    if (pixelWidth.isNotEmpty() && pixelHeight.isNotEmpty()
-                        && pixelWidth.toInt() > 0 && pixelHeight.toInt() > 0
-                    ) {
-                        cancelCurrentJobs(
-                            isCheckGrayScaleJobCanceled = false,
-                            isImageUriToBitmapCanceled = false
-                        )
-
-                        pixelationJob = this.lifecycleScope.launch(Dispatchers.Main) {
-                            pixelateBitmap(pixelWidth.toInt(), pixelHeight.toInt())
-                        }
+//                    val pixelWidth = binding.textInputEditTextPixelateWidth.text.toString()
+//                    val pixelHeight = binding.textInputEditTextPixelateHeight.text.toString()
+//                    if (pixelWidth.isNotEmpty() && pixelHeight.isNotEmpty()
+//                        && pixelWidth.toInt() > 0 && pixelHeight.toInt() > 0
+//                    ) {
+//                        cancelCurrentJobs(
+//                            isCheckGrayScaleJobCanceled = false,
+//                            isImageUriToBitmapCanceled = false
+//                        )
+//
+//                        pixelationJob = this.lifecycleScope.launch(Dispatchers.Main) {
+//                            pixelateBitmap(pixelWidth.toInt(), pixelHeight.toInt())
+//                        }
+//                    }
+                    pixelationJob = this.lifecycleScope.launch(Dispatchers.Main) {
+                        reflectBitmap(isReflectOnXAxis = false)
                     }
                 }
 
@@ -160,6 +161,29 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         if (isImageUriToBitmapCanceled) imageUriToBitmapDeferred?.cancel()
     }
 
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(
+            baseContext, it
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_PERMISSIONS && (grantResults.isNotEmpty() &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED)
+        ) {
+            // Camera permission is granted, start camera.
+            startCamera()
+        }
+    }
+
+    private fun pickPhoto() {
+        pickMedia?.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    }
 
     private fun registerActivityResultCallbacks() {
         // Registers a photo picker activity launcher in single-select mode.
@@ -185,26 +209,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     Log.d(TAG, "No media selected")
                 }
             }
-    }
-
-    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(
-            baseContext, it
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_PERMISSIONS && (grantResults.isNotEmpty() &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED)
-        ) {
-            // Camera permission is granted, start camera.
-            startCamera()
-        }
     }
 
     private fun startCamera() {
@@ -340,19 +344,32 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun pickPhoto() {
-        pickMedia?.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-    }
+    private suspend fun reflectBitmap(isReflectOnXAxis: Boolean) {
+        try {
+            showProgressDialog(true)
+            imageBitmap = imageUriToBitmapDeferred?.await()
 
-    // Load image to imageView
-    private fun updateImageView(image: Any?) {
-        if (image is Uri || image is BitmapDrawable) {
-            image.let {
-                Glide
-                    .with(this)
-                    .load(it)
-                    .into(binding.imageView)
+            if (imageBitmap != null) {
+                // Since this operation takes time, we use Dispatchers.Default,
+                // which is optimized for time consuming calculations.
+                val reflectedBitmapDrawable = withContext(Dispatchers.Default) {
+                    if (isReflectOnXAxis) {
+                        reflectOnXAxis(imageBitmap!!, resources)
+                    } else {
+                        reflectOnYAxis(imageBitmap!!, resources)
+                    }
+                }
+
+                updateImageView(reflectedBitmapDrawable)
+
+                imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
+                    reflectedBitmapDrawable.bitmap
+                }
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Pixelating bitmap failed: ${e.message}", e)
+        } finally {
+            showProgressDialog(false)
         }
     }
 
@@ -364,7 +381,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             if (imageBitmap != null) {
                 withContext(Dispatchers.Default) {
                     val grayScaleBitmapDrawable =
-                        com.vyy.imageprocessingpractice.utils.convertToGrayScale(
+                        convertToGrayScale(
                             bitmap = imageBitmap!!,
                             resources = resources
                         )
@@ -410,6 +427,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    // Load image to imageView
+    private fun updateImageView(image: Any?) {
+        if (image is Uri || image is BitmapDrawable) {
+            image.let {
+                Glide
+                    .with(this)
+                    .load(it)
+                    .into(binding.imageView)
+            }
+        }
+    }
+
     private fun hideGrayAndRgbTextView() {
         binding.apply {
             textViewGrayScale.visibility = View.GONE
@@ -439,6 +468,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     } else {
         @Suppress("DEPRECATION")
         MediaStore.Images.Media.getBitmap(contentResolver, uri)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        cancelCurrentJobs()
     }
 
     override fun onDestroy() {
