@@ -1,18 +1,11 @@
-package com.vyy.imageprocessingpractice.utils
+package com.vyy.imageprocessingpractice.processes
 
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
+import com.vyy.imageprocessingpractice.utils.lastProcessTime
 import java.util.*
-
-
-private var lastPixelationTime: Long = 0
-private const val TIME_BETWEEN_TASKS = 400
-
-fun checkIfShouldPixelate() =
-    (System.currentTimeMillis() - lastPixelationTime) > TIME_BETWEEN_TASKS
-
 
 /**
  * A simple pixelation algorithm. This uses a box blur algorithm where all the
@@ -23,7 +16,7 @@ fun invokePixelation(
     bitmap: Bitmap, pixelWidth: Int, pixelHeight: Int, resources: Resources
 ): BitmapDrawable {
     // We use this variable to check if enough time has passed for a new operation.
-    lastPixelationTime = System.currentTimeMillis()
+    lastProcessTime = System.currentTimeMillis()
 
     // width and height of the picture
     val width: Int = bitmap.width

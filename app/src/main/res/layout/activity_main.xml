@@ -9,7 +9,7 @@
 
     <FrameLayout
         android:id="@+id/frame"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="@dimen/margin_large"
         android:layout_marginEnd="@dimen/margin_large"
@@ -77,62 +77,16 @@
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="@id/frame"
         app:layout_constraintStart_toStartOf="@id/frame"
-        app:layout_constraintTop_toBottomOf="@id/cameraButton_frame" />
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/textInputLayout_pixelate_width"
-        style="@style/textInputLayoutStyle"
-        android:hint="@string/width"
-        app:layout_constraintEnd_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/textInputEditText_pixelate_width"
-            style="@style/textInputEditTextStyle"
-            tools:ignore="SpeakableTextPresentCheck" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/textInputLayout_pixelate_height"
-        style="@style/textInputLayoutStyle"
-        android:hint="@string/height"
-        app:layout_constraintStart_toEndOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/textInputEditText_pixelate_height"
-            style="@style/textInputEditTextStyle"
-            tools:ignore="SpeakableTextPresentCheck" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <Button
-        android:id="@+id/button_pixelate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_medium"
-        android:text="@string/pixelate"
-        app:layout_constraintEnd_toEndOf="@id/textInputLayout_pixelate_height"
-        app:layout_constraintStart_toStartOf="@id/textInputLayout_pixelate_width"
-        app:layout_constraintTop_toBottomOf="@id/textInputLayout_pixelate_width" />
+        app:layout_constraintTop_toBottomOf="@id/imageButton_reflect_x_axis" />
 
     <View
         android:layout_width="2dp"
         android:layout_height="0dp"
         android:background="@color/gray_level_5"
-        app:layout_constraintBottom_toTopOf="@id/textInputLayout_pixelate_width"
+        app:layout_constraintBottom_toTopOf="@id/button_process"
         app:layout_constraintEnd_toEndOf="@id/guideline4"
         app:layout_constraintStart_toStartOf="@id/guideline4"
         app:layout_constraintTop_toBottomOf="@id/view_separatorLine" />
-
-    <View
-        android:layout_width="2dp"
-        android:layout_height="0dp"
-        android:background="@color/gray_level_5"
-        app:layout_constraintBottom_toTopOf="@id/button_pixelate"
-        app:layout_constraintEnd_toEndOf="@id/guideline4"
-        app:layout_constraintStart_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/textInputLayout_pixelate_width" />
-
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline3"
@@ -154,9 +108,10 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/margin_xxx_large"
         android:background="@drawable/button_gallery_background"
+        android:contentDescription="@string/take_a_photo_from_camera"
         android:padding="@dimen/padding_medium"
-        app:layout_constraintStart_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/guideline3">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/guideline4">
 
         <Button
             android:id="@+id/galleryButton"
@@ -172,9 +127,10 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/margin_xxx_large"
         android:background="@drawable/button_camera_background"
+        android:contentDescription="@string/pick_image_from_gallery"
         android:padding="@dimen/padding_medium"
-        app:layout_constraintEnd_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/guideline3">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/guideline4">
 
         <Button
             android:id="@+id/cameraButton"
@@ -184,18 +140,167 @@
             app:backgroundTint="@color/white" />
     </FrameLayout>
 
-    <TextView
-        android:id="@+id/timing"
-        style="@style/TextViewStyle"
+    <ImageButton
+        android:id="@+id/imageButton_reflect_y_axis"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_large"
+        android:background="@color/transparent"
+        android:contentDescription="@string/reflect_on_y_axis"
+        android:padding="@dimen/padding_medium"
+        android:src="@drawable/ic_flip"
+        app:layout_constraintEnd_toStartOf="@id/imageButton_reflect_x_axis"
+        app:layout_constraintStart_toStartOf="@id/frame"
+        app:layout_constraintTop_toBottomOf="@id/guideline3" />
+
+    <ImageButton
+        android:id="@+id/imageButton_reflect_x_axis"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/transparent"
+        android:contentDescription="@string/reflect_on_x_axis"
+        android:padding="@dimen/padding_medium"
+        android:rotation="270"
+        android:src="@drawable/ic_flip"
+        app:layout_constraintEnd_toStartOf="@id/imageButton_resize"
+        app:layout_constraintStart_toEndOf="@id/imageButton_reflect_y_axis"
+        app:layout_constraintTop_toBottomOf="@id/guideline3" />
+
+    <ImageButton
+        android:id="@+id/imageButton_resize"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/image_button_unselected_background"
+        android:contentDescription="@string/resize_image"
+        android:padding="@dimen/padding_medium"
+        android:src="@drawable/ic_photo_resize_24"
+        app:layout_constraintEnd_toStartOf="@id/imageButton_crop"
+        app:layout_constraintStart_toEndOf="@id/imageButton_reflect_x_axis"
+        app:layout_constraintTop_toBottomOf="@id/guideline3" />
+
+    <ImageButton
+        android:id="@+id/imageButton_crop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/image_button_unselected_background"
+        android:contentDescription="@string/crop_image"
+        android:padding="@dimen/padding_medium"
+        android:src="@drawable/ic_crop_24"
+        app:layout_constraintEnd_toStartOf="@id/imageButton_pixelate"
+        app:layout_constraintStart_toEndOf="@id/imageButton_resize"
+        app:layout_constraintTop_toBottomOf="@id/guideline3" />
+
+    <ImageButton
+        android:id="@+id/imageButton_pixelate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/image_button_unselected_background"
+        android:contentDescription="@string/pixelate_image"
+        android:padding="@dimen/padding_medium"
+        android:src="@drawable/ic_pixelate_24"
+        app:layout_constraintEnd_toEndOf="@id/frame"
+        app:layout_constraintStart_toEndOf="@id/imageButton_crop"
+        app:layout_constraintTop_toBottomOf="@id/guideline3" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout_width"
+        style="@style/textInputLayoutStyle"
+        android:hint="@string/width"
         android:visibility="gone"
-        app:drawableStartCompat="@drawable/ic_timing"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.496"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/button_pixelate"
-        tools:text="timing"
+        app:layout_constraintEnd_toStartOf="@id/guideline4"
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine"
+        tools:visibility="visible">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/textInputEditText_width"
+            style="@style/textInputEditTextStyle"
+            tools:ignore="SpeakableTextPresentCheck" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout_height"
+        style="@style/textInputLayoutStyle"
+        android:hint="@string/height"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@id/guideline4"
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine"
+        tools:visibility="visible">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/textInputEditText_height"
+            style="@style/textInputEditTextStyle"
+            tools:ignore="SpeakableTextPresentCheck" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout_fromX"
+        style="@style/textInputLayoutStyle"
+        android:hint="@string/fromx"
+        android:visibility="gone"
+        app:layout_constraintEnd_toStartOf="@id/textInputLayout_fromY"
+        app:layout_constraintTop_toBottomOf="@id/textInputLayout_width">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/textInputEditText_fromX"
+            style="@style/textInputEditTextStyle"
+            tools:ignore="SpeakableTextPresentCheck" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout_fromY"
+        style="@style/textInputLayoutStyle"
+        android:hint="@string/fromy"
+        android:visibility="gone"
+        app:layout_constraintEnd_toStartOf="@id/guideline4"
+        app:layout_constraintTop_toBottomOf="@id/textInputLayout_width">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/textInputEditText_fromY"
+            style="@style/textInputEditTextStyle"
+            tools:ignore="SpeakableTextPresentCheck" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout_toX"
+        style="@style/textInputLayoutStyle"
+        android:hint="@string/tox"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@id/guideline4"
+        app:layout_constraintTop_toBottomOf="@id/textInputLayout_height">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/textInputEditText_toX"
+            style="@style/textInputEditTextStyle"
+            tools:ignore="SpeakableTextPresentCheck" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout_toY"
+        style="@style/textInputLayoutStyle"
+        android:hint="@string/toy"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@id/textInputLayout_toX"
+        app:layout_constraintTop_toBottomOf="@id/textInputLayout_height">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/textInputEditText_toY"
+            style="@style/textInputEditTextStyle"
+            tools:ignore="SpeakableTextPresentCheck" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/button_process"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_medium"
+        android:backgroundTint="@color/white"
+        android:text="@string/pixelate"
+        android:textColor="@color/colorPrimary"
+        android:textSize="@dimen/textSize_small"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@id/textInputLayout_height"
+        app:layout_constraintStart_toStartOf="@id/textInputLayout_width"
+        app:layout_constraintTop_toBottomOf="@id/textInputLayout_fromX"
         tools:visibility="visible" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

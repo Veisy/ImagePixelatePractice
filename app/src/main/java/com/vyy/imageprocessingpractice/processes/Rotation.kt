@@ -1,16 +1,11 @@
-package com.vyy.imageprocessingpractice.utils
+package com.vyy.imageprocessingpractice.processes
 
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.graphics.drawable.BitmapDrawable
 import android.util.DisplayMetrics
-
-private var lastRotationTime: Long = 0
-private const val TIME_BETWEEN_TASKS = 400
-
-fun checkIfShouldRotate() =
-    (System.currentTimeMillis() - lastRotationTime) > TIME_BETWEEN_TASKS
+import com.vyy.imageprocessingpractice.utils.lastProcessTime
 
 fun reflectOnXAxis(bitmap: Bitmap, resources: Resources) =
     scale(bitmap, 1f, -1f, resources)
@@ -26,7 +21,7 @@ private fun scale(
     resources: Resources
 ): BitmapDrawable {
     // We use this variable to check if enough time has passed for a new operation.
-    lastRotationTime = System.currentTimeMillis()
+    lastProcessTime = System.currentTimeMillis()
 
     val matrix = Matrix()
     matrix.preScale(scaleX, scaleY)
