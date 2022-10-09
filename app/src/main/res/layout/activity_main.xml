@@ -32,6 +32,21 @@
             android:contentDescription="@string/image" />
     </FrameLayout>
 
+    <ImageButton
+        android:id="@+id/imageButton_undo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/image_button_selected_background"
+        android:contentDescription="@string/undo"
+        android:padding="@dimen/padding_medium"
+        android:src="@drawable/ic_undo_24"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/galleryButton_frame"
+        app:layout_constraintStart_toStartOf="@id/frame"
+        app:layout_constraintTop_toTopOf="@id/galleryButton_frame"
+        tools:visibility="visible" />
+
+
     <ProgressBar
         android:id="@+id/progresBar"
         style="?android:attr/progressBarStyle"
@@ -52,8 +67,8 @@
         android:text="@string/gray"
         android:textStyle="bold"
         android:visibility="gone"
-        app:layout_constraintStart_toStartOf="@id/view_separatorLine"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine"
+        app:layout_constraintStart_toStartOf="@id/view_separatorLine_horizontal"
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal"
         tools:visibility="visible" />
 
     <TextView
@@ -64,12 +79,19 @@
         android:text="@string/rgb"
         android:textStyle="bold"
         android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="@id/view_separatorLine"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine"
+        app:layout_constraintEnd_toEndOf="@id/view_separatorLine_horizontal"
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal"
         tools:visibility="visible" />
 
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier_grayScale"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="textView_grayScale, textView_rgb" />
+
     <View
-        android:id="@+id/view_separatorLine"
+        android:id="@+id/view_separatorLine_horizontal"
         android:layout_width="0dp"
         android:layout_height="5dp"
         android:layout_marginTop="@dimen/margin_large"
@@ -80,13 +102,16 @@
         app:layout_constraintTop_toBottomOf="@id/imageButton_reflect_x_axis" />
 
     <View
+        android:id="@+id/view_separatorLine_vertical"
         android:layout_width="2dp"
         android:layout_height="0dp"
         android:background="@color/gray_level_5"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/button_process"
         app:layout_constraintEnd_toEndOf="@id/guideline4"
         app:layout_constraintStart_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine" />
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal"
+        tools:visibility="visible" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline3"
@@ -106,12 +131,14 @@
         android:id="@+id/galleryButton_frame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/margin_xxx_large"
+        android:layout_marginTop="@dimen/margin_medium"
+        android:layout_marginBottom="@dimen/margin_medium"
         android:background="@drawable/button_gallery_background"
         android:contentDescription="@string/take_a_photo_from_camera"
         android:padding="@dimen/padding_medium"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/guideline4">
+        app:layout_constraintEnd_toStartOf="@id/guideline4"
+        app:layout_constraintTop_toBottomOf="@id/button_process">
 
         <Button
             android:id="@+id/galleryButton"
@@ -125,12 +152,14 @@
         android:id="@+id/cameraButton_frame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/margin_xxx_large"
+        android:layout_marginTop="@dimen/margin_medium"
+        android:layout_marginBottom="@dimen/margin_medium"
         android:background="@drawable/button_camera_background"
         android:contentDescription="@string/pick_image_from_gallery"
         android:padding="@dimen/padding_medium"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/guideline4">
+        app:layout_constraintStart_toEndOf="@id/guideline4"
+        app:layout_constraintTop_toBottomOf="@id/button_process">
 
         <Button
             android:id="@+id/cameraButton"
@@ -207,7 +236,7 @@
         android:hint="@string/width"
         android:visibility="gone"
         app:layout_constraintEnd_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine"
+        app:layout_constraintTop_toBottomOf="@id/barrier_grayScale"
         tools:visibility="visible">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -222,7 +251,7 @@
         android:hint="@string/height"
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine"
+        app:layout_constraintTop_toBottomOf="@id/barrier_grayScale"
         tools:visibility="visible">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -237,7 +266,7 @@
         android:hint="@string/fromx"
         android:visibility="gone"
         app:layout_constraintEnd_toStartOf="@id/textInputLayout_fromY"
-        app:layout_constraintTop_toBottomOf="@id/textInputLayout_width">
+        app:layout_constraintTop_toBottomOf="@id/barrier_grayScale">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_fromX"
@@ -251,7 +280,7 @@
         android:hint="@string/fromy"
         android:visibility="gone"
         app:layout_constraintEnd_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/textInputLayout_width">
+        app:layout_constraintTop_toBottomOf="@id/barrier_grayScale">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_fromY"
@@ -265,7 +294,7 @@
         android:hint="@string/tox"
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/textInputLayout_height">
+        app:layout_constraintTop_toBottomOf="@id/barrier_grayScale">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_toX"
@@ -279,13 +308,20 @@
         android:hint="@string/toy"
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@id/textInputLayout_toX"
-        app:layout_constraintTop_toBottomOf="@id/textInputLayout_height">
+        app:layout_constraintTop_toBottomOf="@id/barrier_grayScale">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_toY"
             style="@style/textInputEditTextStyle"
             tools:ignore="SpeakableTextPresentCheck" />
     </com.google.android.material.textfield.TextInputLayout>
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier_inputs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="textInputLayout_width, textInputLayout_height, textInputLayout_fromX, textInputLayout_fromY, textInputLayout_toX, textInputLayout_toY" />
 
     <Button
         android:id="@+id/button_process"
@@ -298,9 +334,9 @@
         android:textSize="@dimen/textSize_small"
         android:textStyle="bold"
         android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="@id/textInputLayout_height"
-        app:layout_constraintStart_toStartOf="@id/textInputLayout_width"
-        app:layout_constraintTop_toBottomOf="@id/textInputLayout_fromX"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/barrier_inputs"
         tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

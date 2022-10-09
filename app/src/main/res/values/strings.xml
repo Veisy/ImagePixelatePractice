@@ -20,4 +20,5 @@
     <string name="fromy">fromY</string>
     <string name="tox">toX</string>
     <string name="toy">toY</string>
+    <string name="undo">Undo</string>
 </resources>

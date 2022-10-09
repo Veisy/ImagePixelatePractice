@@ -25,6 +25,7 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
@@ -37,6 +38,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.collections.ArrayDeque
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -47,6 +49,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>? = null
     private var imageUri: Uri? = null
     private var imageBitmap: Bitmap? = null
+    private var imageStack: ArrayDeque<Bitmap> = ArrayDeque()
 
     private var imageProcessingJob: Job? = null
     private var checkGrayScaleJob: Job? = null
@@ -71,17 +74,23 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         checkPermissions()
 
         // Default Image is Lenna.
-        imageUri = Uri.Builder()
-            .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
-            .authority(resources.getResourcePackageName(R.drawable.lenna))
-            .appendPath(resources.getResourceTypeName(R.drawable.lenna))
-            .appendPath(resources.getResourceEntryName(R.drawable.lenna))
-            .build()
-        updateImageView(imageUri)
-        hideGrayAndRgbTextView()
+        if (imageBitmap == null || imageStack.size < 1) {
+            imageUri = Uri.Builder()
+                .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
+                .authority(resources.getResourcePackageName(R.drawable.lenna))
+                .appendPath(resources.getResourceTypeName(R.drawable.lenna))
+                .appendPath(resources.getResourceEntryName(R.drawable.lenna))
+                .build()
+            updateImageView(imageUri)
+            hideGrayAndRgbTextView()
 
-        imageUriToBitmapDeferred = this.lifecycleScope.async(Dispatchers.Default) {
-            imageUri?.let { uriToBitmap(it) }
+            imageUriToBitmapDeferred = this.lifecycleScope.async(Dispatchers.Default) {
+                val bitmap = imageUri?.let { uriToBitmap(it) }
+                if (bitmap != null) {
+                    addToImageStack(bitmap)
+                }
+                bitmap
+            }
         }
     }
 
@@ -107,12 +116,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             imageButtonResize.setOnClickListener(this@MainActivity)
             imageButtonCrop.setOnClickListener(this@MainActivity)
             imageButtonPixelate.setOnClickListener(this@MainActivity)
+            imageButtonUndo.setOnClickListener(this@MainActivity)
         }
     }
 
     override fun onClick(v: View?) {
         v?.let {
             when (v.id) {
+                R.id.imageButton_undo -> {
+                    cancelCurrentJobs()
+                    hideGrayAndRgbTextView()
+                    removeFromImageStack()
+                }
+
                 R.id.cameraButton -> {
                     cancelCurrentJobs()
                     hideGrayAndRgbTextView()
@@ -184,8 +200,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                         height.toDouble()
                                     )
                                     R.id.imageButton_pixelate -> pixelateBitmap(
-                                        width.toInt(),
-                                        height.toInt()
+                                        width.toDouble(),
+                                        height.toDouble()
                                     )
                                 }
 
@@ -213,6 +229,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         }
                     }
                 }
+                else -> {}
             }
         }
     }
@@ -267,7 +284,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         updateImageView(uri)
 
                         imageUriToBitmapDeferred = this.lifecycleScope.async(Dispatchers.Default) {
-                            imageUri?.let { uriToBitmap(it) }
+                            val bitmap = imageUri?.let { uriToBitmap(it) }
+                            if (bitmap != null) {
+                                addToImageStack(bitmap)
+                            }
+                            bitmap
                         }
 
                         checkIfGrayScale()
@@ -361,7 +382,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         }
 
                         imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
-                            imageUri?.let { uriToBitmap(it) }
+                            val bitmap = imageUri?.let { uriToBitmap(it) }
+                            if (bitmap != null) {
+                                addToImageStack(bitmap)
+                            }
+                            bitmap
                         }
 
                         // Check if image is grayscale.
@@ -378,34 +403,37 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     // Decode Uri to Bitmap, and then use pixelate algorithm on the Bitmap.
-    private suspend fun pixelateBitmap(width: Int, height: Int) {
+    private suspend fun pixelateBitmap(width: Double, height: Double) {
         try {
             showProgressDialog(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
 
             // Since this operation takes time, we use Dispatchers.Default,
             // which is optimized for time consuming calculations.
-            withContext(Dispatchers.Default) {
-                if (checkEnoughTimePassed() && imageBitmap != null) {
-                    val pixelatedBitmapDrawable = invokePixelation(
+            if (checkEnoughTimePassed() && imageBitmap != null) {
+                val pixelatedBitmapDrawable = withContext(Dispatchers.Default) {
+                    invokePixelation(
                         bitmap = imageBitmap!!,
-                        pixelWidth = width.coerceAtMost(imageBitmap!!.width),
-                        pixelHeight = height.coerceAtMost(imageBitmap!!.height),
+                        pixelWidth = (width.toInt()).coerceAtMost(imageBitmap!!.width),
+                        pixelHeight = (height.toInt()).coerceAtMost(imageBitmap!!.height),
                         resources = resources
                     )
-
-                    // Since we are doing UI operations at this line,
-                    // we return back to Main Dispatcher.
-                    withContext(Dispatchers.Main) {
-                        updateImageView(pixelatedBitmapDrawable)
-                    }
-                } else {
-                    Log.e(
-                        TAG,
-                        "Not enough time has passed to re-pixate, or ImageBitmap is null."
-                    )
                 }
+
+                updateImageView(pixelatedBitmapDrawable)
+
+                imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
+                    val bitmap = pixelatedBitmapDrawable.bitmap
+                    addToImageStack(bitmap)
+                    bitmap
+                }
+            } else {
+                Log.e(
+                    TAG,
+                    "Not enough time has passed to re-pixate, or ImageBitmap is null."
+                )
             }
+
         } catch (e: Exception) {
             Log.e(TAG, "Pixelating bitmap failed: ${e.message}", e)
         } finally {
@@ -438,7 +466,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 updateImageView(reflectedBitmapDrawable)
 
                 imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
-                    reflectedBitmapDrawable.bitmap
+                    val bitmap = reflectedBitmapDrawable.bitmap
+                    addToImageStack(bitmap)
+                    bitmap
                 }
             }
         } catch (e: Exception) {
@@ -473,7 +503,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 updateImageView(resizedBitmapDrawable)
 
                 imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
-                    resizedBitmapDrawable.bitmap
+                    val bitmap = resizedBitmapDrawable.bitmap
+                    addToImageStack(bitmap)
+                    bitmap
                 }
             }
         } catch (e: Exception) {
@@ -519,7 +551,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 updateImageView(croppedBitmapDrawable)
 
                 imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
-                    croppedBitmapDrawable.bitmap
+                    val bitmap = croppedBitmapDrawable.bitmap
+                    addToImageStack(bitmap)
+                    bitmap
                 }
             }
         } catch (e: Exception) {
@@ -543,7 +577,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         )
 
                     imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
-                        grayScaleBitmapDrawable.bitmap
+                        val bitmap = grayScaleBitmapDrawable.bitmap
+                        addToImageStack(bitmap)
+                        bitmap
                     }
 
                     // Since we are doing UI operations at this line,
@@ -599,6 +635,32 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private suspend fun addToImageStack(bitmap: Bitmap) {
+        // If stack size is already 10, remove the first element
+        if (imageStack.size == 10) {
+            imageStack.removeAt(0)
+        }
+
+        imageStack.addLast(bitmap)
+        if (imageStack.size > 1) {
+            withContext(Dispatchers.Main) {
+                binding.imageButtonUndo.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    private fun removeFromImageStack() {
+        if (imageStack.size > 1) {
+            imageStack.removeLast()
+            updateImageView(imageStack.last().toDrawable(resources))
+            imageUriToBitmapDeferred = this.lifecycleScope.async(Dispatchers.Default) {
+                imageStack.last()
+            }
+        } else if(imageStack.size == 1) {
+            binding.imageButtonUndo.visibility = View.GONE
+        }
+    }
+
     private fun updateSelectedProcess(imageButton: ImageButton) {
         val allImageButtons = listOf(
             binding.imageButtonPixelate,
@@ -616,15 +678,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     text.toString()
                 }
             }
-        }
-
-        binding.buttonProcess.visibility = if (imageButton.id == R.id.imageButton_pixelate
-            || imageButton.id == R.id.imageButton_crop
-            || imageButton.id == R.id.imageButton_resize
-        ) {
-            View.VISIBLE
-        } else {
-            View.GONE
         }
 
         allImageButtons.forEach { button ->
@@ -652,6 +705,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         widthAndHeightLayouts.forEach {
             it.visibility = if (imageButton.id == R.id.imageButton_crop) View.GONE else View.VISIBLE
         }
+
+        if (imageButton.id == R.id.imageButton_pixelate
+            || imageButton.id == R.id.imageButton_crop
+            || imageButton.id == R.id.imageButton_resize
+        ) {
+            binding.apply {
+                buttonProcess.visibility = View.VISIBLE
+                viewSeparatorLineVertical.visibility = View.VISIBLE
+            }
+        } else {
+            binding.apply {
+                buttonProcess.visibility = View.GONE
+                viewSeparatorLineVertical.visibility = View.GONE
+            }
+        }
     }
 
     private fun hideGrayAndRgbTextView() {
@@ -670,7 +738,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 galleryButton,
                 textViewRgb,
                 imageButtonReflectYAxis,
-                imageButtonReflectXAxis
+                imageButtonReflectXAxis,
+                imageButtonResize,
+                imageButtonCrop,
+                imageButtonPixelate
             )
             clickableViews.forEach { it.isEnabled = !isShown }
         }

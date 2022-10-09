@@ -3,6 +3,7 @@ package com.vyy.imageprocessingpractice.processes
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
+import androidx.core.graphics.drawable.toDrawable
 import com.vyy.imageprocessingpractice.utils.lastProcessTime
 
 fun resize(
@@ -14,5 +15,5 @@ fun resize(
     // Resize the bitmap to the given width and height.
     val resizedBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true)
 
-    return BitmapDrawable(resources, resizedBitmap)
+    return resizedBitmap.toDrawable(resources)
 }

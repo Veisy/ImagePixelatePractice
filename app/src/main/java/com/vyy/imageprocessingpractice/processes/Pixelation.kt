@@ -4,6 +4,7 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
+import androidx.core.graphics.drawable.toDrawable
 import com.vyy.imageprocessingpractice.utils.lastProcessTime
 import java.util.*
 
@@ -94,5 +95,5 @@ fun invokePixelation(
         }
     }
 
-    return BitmapDrawable(resources, mPixelatedBitmap)
+    return mPixelatedBitmap.toDrawable(resources)
 }

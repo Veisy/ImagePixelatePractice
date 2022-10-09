@@ -4,6 +4,7 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
+import androidx.core.graphics.drawable.toDrawable
 
 
 // Check if image is gray scale
@@ -13,7 +14,7 @@ fun isGrayScale(bitmap: Bitmap): Boolean {
             val pixel = bitmap.getPixel(x, y)
 
             // If there is even a single RGB pixel, the picture is not RGB.
-            if(Color.red(pixel) != Color.green(pixel) || Color.blue(pixel) != Color.red(pixel)) {
+            if (Color.red(pixel) != Color.green(pixel) || Color.blue(pixel) != Color.red(pixel)) {
                 return false
             }
         }
@@ -34,5 +35,5 @@ fun convertToGrayScale(bitmap: Bitmap, resources: Resources): BitmapDrawable {
             grayScaleBitmap.setPixel(x, y, Color.rgb(grayScale, grayScale, grayScale))
         }
     }
-    return BitmapDrawable(resources, grayScaleBitmap)
+    return grayScaleBitmap.toDrawable(resources)
 }

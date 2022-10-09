@@ -3,6 +3,7 @@ package com.vyy.imageprocessingpractice.processes
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
+import androidx.core.graphics.drawable.toDrawable
 import com.vyy.imageprocessingpractice.utils.lastProcessTime
 
 // Crop bitmap image and return as BitmapDrawable
@@ -26,5 +27,5 @@ fun crop(
         toY
     )
 
-    return BitmapDrawable(resources, croppedBitmap)
+    return croppedBitmap.toDrawable(resources)
 }

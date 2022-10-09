@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.graphics.drawable.BitmapDrawable
 import android.util.DisplayMetrics
+import androidx.core.graphics.drawable.toDrawable
 import com.vyy.imageprocessingpractice.utils.lastProcessTime
 
 fun reflectOnXAxis(bitmap: Bitmap, resources: Resources) =
@@ -30,5 +31,5 @@ private fun scale(
     )
 
     reflectedBitmap.density = DisplayMetrics.DENSITY_DEFAULT
-    return BitmapDrawable(resources, reflectedBitmap)
+    return reflectedBitmap.toDrawable(resources)
 }
