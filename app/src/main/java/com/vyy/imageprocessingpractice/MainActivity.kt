@@ -26,12 +26,18 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
+import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.vyy.imagemosaicing.R
 import com.vyy.imagemosaicing.databinding.ActivityMainBinding
 import com.vyy.imageprocessingpractice.processes.*
+import com.vyy.imageprocessingpractice.utils.Constants.FILENAME_FORMAT
+import com.vyy.imageprocessingpractice.utils.Constants.MAX_HEIGHT
+import com.vyy.imageprocessingpractice.utils.Constants.MAX_WIDTH
+import com.vyy.imageprocessingpractice.utils.Constants.REQUEST_CODE_PERMISSIONS
+import com.vyy.imageprocessingpractice.utils.InputFilterMinMax
 import com.vyy.imageprocessingpractice.utils.checkEnoughTimePassed
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
@@ -64,6 +70,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         registerActivityResultCallbacks()
         setClickListeners()
+        setEditTextFilters()
 
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
@@ -74,7 +81,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         checkPermissions()
 
         // Default Image is Lenna.
-        if (imageBitmap == null || imageStack.size < 1) {
+        if (imageStack.size < 1) {
             imageUri = Uri.Builder()
                 .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
                 .authority(resources.getResourcePackageName(R.drawable.lenna))
@@ -187,11 +194,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     ) {
                         val width = binding.textInputEditTextWidth.text.toString()
                         val height = binding.textInputEditTextHeight.text.toString()
+
                         if (checkIfInputsValid(listOf(width, height))) {
                             cancelCurrentJobs(
                                 isCheckGrayScaleCanceled = false,
                                 isImageUriToBitmapCanceled = false
                             )
+                            clearInputTextFields()
 
                             imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                                 when (selectedProcess) {
@@ -217,6 +226,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 isCheckGrayScaleCanceled = false,
                                 isImageUriToBitmapCanceled = false
                             )
+                            clearInputTextFields()
 
                             imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                                 cropBitmap(
@@ -338,7 +348,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
-        showProgressDialog(true)
+        showProgressBar(true)
 
         // Create time stamped name and MediaStore entry.
         val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
@@ -368,7 +378,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
                     runOnUiThread {
-                        showProgressDialog(false)
+                        showProgressBar(false)
                     }
                 }
 
@@ -395,7 +405,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         Log.e(TAG, "Loading image uri to ImageView failed: ${e.message}", e)
                     } finally {
                         runOnUiThread {
-                            showProgressDialog(false)
+                            showProgressBar(false)
                         }
                     }
                 }
@@ -405,7 +415,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     // Decode Uri to Bitmap, and then use pixelate algorithm on the Bitmap.
     private suspend fun pixelateBitmap(width: Double, height: Double) {
         try {
-            showProgressDialog(true)
+            showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
 
             // Since this operation takes time, we use Dispatchers.Default,
@@ -437,13 +447,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         } catch (e: Exception) {
             Log.e(TAG, "Pixelating bitmap failed: ${e.message}", e)
         } finally {
-            showProgressDialog(false)
+            showProgressBar(false)
         }
     }
 
     private suspend fun reflectBitmap(isReflectOnXAxis: Boolean) {
         try {
-            showProgressDialog(true)
+            showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
 
             if (checkEnoughTimePassed() && imageBitmap != null) {
@@ -474,28 +484,28 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         } catch (e: Exception) {
             Log.e(TAG, "Reflecting bitmap failed: ${e.message}", e)
         } finally {
-            showProgressDialog(false)
+            showProgressBar(false)
         }
     }
 
-    private suspend fun resizeBitmap(widthRatio: Double, heightRatio: Double) {
+    private suspend fun resizeBitmap(width: Double, height: Double) {
         try {
-            showProgressDialog(true)
+            showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
 
             if (
                 checkEnoughTimePassed()
                 && imageBitmap != null
-                && widthRatio <= 1
-                && heightRatio <= 1
+                && width <= MAX_WIDTH
+                && height <= MAX_HEIGHT
             ) {
                 // Since this operation takes time, we use Dispatchers.Default,
                 // which is optimized for time consuming calculations.
                 val resizedBitmapDrawable = withContext(Dispatchers.Default) {
                     resize(
                         bitmap = imageBitmap!!,
-                        width = (widthRatio * imageBitmap!!.width).toInt(),
-                        height = (heightRatio * imageBitmap!!.height).toInt(),
+                        width = width.toInt(),
+                        height = height.toInt(),
                         resources = resources
                     )
                 }
@@ -511,7 +521,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         } catch (e: Exception) {
             Log.e(TAG, "Resizing bitmap failed: ${e.message}", e)
         } finally {
-            showProgressDialog(false)
+            showProgressBar(false)
         }
     }
 
@@ -522,7 +532,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         toYRatio: Double
     ) {
         try {
-            showProgressDialog(true)
+            showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
             // X and Y points are taken proportional to the width and height of the bitmap
             if (
@@ -559,13 +569,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         } catch (e: Exception) {
             Log.e(TAG, "Cropping bitmap failed: ${e.message}", e)
         } finally {
-            showProgressDialog(false)
+            showProgressBar(false)
         }
     }
 
     private suspend fun convertToGrayScale() {
         try {
-            showProgressDialog(true)
+            showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
 
             if (checkEnoughTimePassed() && imageBitmap != null) {
@@ -596,7 +606,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         } catch (e: Exception) {
             Log.e(TAG, "Converting image to gray scale failed: ${e.message}", e)
         } finally {
-            showProgressDialog(false)
+            showProgressBar(false)
         }
     }
 
@@ -652,11 +662,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private fun removeFromImageStack() {
         if (imageStack.size > 1) {
             imageStack.removeLast()
-            updateImageView(imageStack.last().toDrawable(resources))
             imageUriToBitmapDeferred = this.lifecycleScope.async(Dispatchers.Default) {
                 imageStack.last()
             }
-        } else if(imageStack.size == 1) {
+            updateImageView(imageStack.last().toDrawable(resources))
+            if (binding.progresBar.isVisible) {
+                showProgressBar(false)
+            }
+        }
+        if (imageStack.size == 1) {
             binding.imageButtonUndo.visibility = View.GONE
         }
     }
@@ -729,7 +743,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun showProgressDialog(isShown: Boolean) {
+    private fun showProgressBar(isShown: Boolean) {
         binding.apply {
             progresBar.visibility = if (isShown) View.VISIBLE else View.GONE
             val clickableViews = listOf(
@@ -744,6 +758,28 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 imageButtonPixelate
             )
             clickableViews.forEach { it.isEnabled = !isShown }
+        }
+    }
+
+    private fun clearInputTextFields() {
+        binding.apply {
+            textInputEditTextFromX.text?.clear()
+            textInputEditTextFromY.text?.clear()
+            textInputEditTextToX.text?.clear()
+            textInputEditTextToY.text?.clear()
+            textInputEditTextWidth.text?.clear()
+            textInputEditTextHeight.text?.clear()
+        }
+    }
+
+    private fun setEditTextFilters() {
+        binding.apply {
+            textInputEditTextFromX.filters = arrayOf(InputFilterMinMax(0.0, 1.0))
+            textInputEditTextFromY.filters = arrayOf(InputFilterMinMax(0.0, 1.0))
+            textInputEditTextToX.filters = arrayOf(InputFilterMinMax(0.0, 1.0))
+            textInputEditTextToY.filters = arrayOf(InputFilterMinMax(0.0, 1.0))
+            textInputEditTextWidth.filters = arrayOf(InputFilterMinMax(0.0, MAX_WIDTH.toDouble()))
+            textInputEditTextHeight.filters = arrayOf(InputFilterMinMax(0.0, MAX_HEIGHT.toDouble()))
         }
     }
 
@@ -775,8 +811,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     companion object {
         private val TAG = MainActivity::class.java.simpleName
-        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
-        private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS =
             mutableListOf(
                 CAMERA,
