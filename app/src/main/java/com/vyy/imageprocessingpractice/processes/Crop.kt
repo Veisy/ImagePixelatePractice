@@ -18,14 +18,31 @@ fun crop(
     // We use this variable to check if enough time has passed for a new operation.
     lastProcessTime = System.currentTimeMillis()
 
-    // Crop the bitmap to the given width and height.
-    val croppedBitmap = Bitmap.createBitmap(
-        bitmap,
-        fromX,
-        fromY,
-        toX,
-        toY
-    )
+    // width and height of the picture
+    val width: Int = bitmap.width
+    val height: Int = bitmap.height
 
+    val newWidth = toX - fromX
+    val newHeight = toY - fromY
+
+    val bitmapPixels = IntArray(width * height)
+
+    // Get all pixels of the image, and load into bitmapPixels array.
+    bitmap.getPixels(bitmapPixels, 0, width, 0, 0, width, height)
+
+    // Create empty bitmap with the new width and height
+    val croppedBitmap = Bitmap.createBitmap(newWidth, newHeight, Bitmap.Config.ARGB_8888)
+
+    // Crop bitmapPixels array
+    val croppedPixels = IntArray(newWidth * newHeight)
+    var index = 0
+    for (y in fromY until toY) {
+        for (x in fromX until toX) {
+            croppedPixels[index] = bitmapPixels[y * width + x]
+            index++
+        }
+    }
+
+    croppedBitmap.setPixels(croppedPixels, 0, newWidth, 0, 0, newWidth, newHeight)
     return croppedBitmap.toDrawable(resources)
 }

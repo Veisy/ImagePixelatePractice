@@ -178,6 +178,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
 
                 R.id.imageButton_resize -> {
+                    clearInputTextFields()
                     updateSelectedProcess(binding.imageButtonResize)
                 }
 
@@ -185,6 +186,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     updateSelectedProcess(binding.imageButtonCrop)
                 }
                 R.id.imageButton_pixelate -> {
+                    clearInputTextFields()
                     updateSelectedProcess(binding.imageButtonPixelate)
                 }
 
@@ -200,7 +202,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 isCheckGrayScaleCanceled = false,
                                 isImageUriToBitmapCanceled = false
                             )
-                            clearInputTextFields()
 
                             imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                                 when (selectedProcess) {
@@ -213,7 +214,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                         height.toDouble()
                                     )
                                 }
-
                             }
                         }
                     } else if (selectedProcess == R.id.imageButton_crop) {
@@ -226,7 +226,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 isCheckGrayScaleCanceled = false,
                                 isImageUriToBitmapCanceled = false
                             )
-                            clearInputTextFields()
 
                             imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                                 cropBitmap(
@@ -553,7 +552,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         fromX = (fromXRatio * imageBitmap!!.width).toInt(),
                         fromY = (fromYRatio * imageBitmap!!.height).toInt(),
                         toX = (toXRatio * imageBitmap!!.width).toInt(),
-                        toY = (toXRatio * imageBitmap!!.height).toInt(),
+                        toY = (toYRatio * imageBitmap!!.height).toInt(),
                         resources = resources
                     )
                 }

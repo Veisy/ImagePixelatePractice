@@ -24,6 +24,9 @@ private fun scale(
     // We use this variable to check if enough time has passed for a new operation.
     lastProcessTime = System.currentTimeMillis()
 
+    // If we matrix multiple the image with [-1, 1], the image reflected on Y axis.
+    // If we matrix multiple the image with [1, -1], the image reflected on X axis.
+
     val matrix = Matrix()
     matrix.preScale(scaleX, scaleY)
     val reflectedBitmap = Bitmap.createBitmap(

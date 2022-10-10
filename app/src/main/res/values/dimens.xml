@@ -2,6 +2,7 @@
 <resources>
     <dimen name="margin_medium">10dp</dimen>
     <dimen name="margin_large">18dp</dimen>
+    <dimen name="margin_x_large">24dp</dimen>
     <dimen name="margin_xxx_large">50dp</dimen>
     <dimen name="button_width">40dp</dimen>
     <dimen name="button_height">35dp</dimen>
