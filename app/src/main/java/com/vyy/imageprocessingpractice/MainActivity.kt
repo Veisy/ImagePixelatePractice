@@ -608,10 +608,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                             bitmap = imageBitmap!!,
                             resources = resources
                         )
-                        else -> rgbToGray(
-                            bitmap = imageBitmap!!,
-                            resources = resources
-                        )
+                        else ->  {
+                            val grayBitmap = rgbToGray(
+                                bitmap = imageBitmap!!,
+                                resources = resources
+                            )
+                            withContext(Dispatchers.Main) {
+                                binding.apply {
+                                    textViewRgb.visibility = View.GONE
+                                    textViewGrayScale.visibility = View.VISIBLE
+                                }
+                            }
+                            grayBitmap
+                        }
                     }
                 }
 
