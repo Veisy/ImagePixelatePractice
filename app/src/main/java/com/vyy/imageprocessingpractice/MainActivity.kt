@@ -37,6 +37,8 @@ import com.vyy.imageprocessingpractice.utils.Constants.FILENAME_FORMAT
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_HEIGHT
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_WIDTH
 import com.vyy.imageprocessingpractice.utils.Constants.REQUEST_CODE_PERMISSIONS
+import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_HSI
+import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_HSV
 import com.vyy.imageprocessingpractice.utils.InputFilterMinMax
 import com.vyy.imageprocessingpractice.utils.checkEnoughTimePassed
 import kotlinx.coroutines.*
@@ -124,6 +126,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             imageButtonCrop.setOnClickListener(this@MainActivity)
             imageButtonPixelate.setOnClickListener(this@MainActivity)
             imageButtonUndo.setOnClickListener(this@MainActivity)
+            buttonRgbToHsi.setOnClickListener(this@MainActivity)
+            buttonRgbToHsv.setOnClickListener(this@MainActivity)
         }
     }
 
@@ -238,6 +242,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         }
                     }
                 }
+
+                R.id.button_rgbToHsi -> {
+                    cancelCurrentJobs(isImageUriToBitmapCanceled = false)
+                    imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
+                        convertColor(RGB_TO_HSI)
+                    }
+                }
+
+                R.id.button_rgbToHsv -> {
+                    cancelCurrentJobs(isImageUriToBitmapCanceled = false)
+                    imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
+                        convertColor(RGB_TO_HSV)
+                    }
+                }
+
                 else -> {}
             }
         }
@@ -572,34 +591,63 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private suspend fun convertColor(conversionName: String) {
+        try {
+            showProgressBar(true)
+            imageBitmap = imageUriToBitmapDeferred?.await()
+
+            if (checkEnoughTimePassed() && imageBitmap != null) {
+                val convertedBitmapDrawable = withContext(Dispatchers.Default) {
+                    when (conversionName) {
+                        RGB_TO_HSI -> rgbToHsi(
+                            bitmap = imageBitmap!!,
+                            resources = resources
+                        )
+                        else -> rgbToHsv(
+                            bitmap = imageBitmap!!,
+                            resources = resources
+                        )
+                    }
+                }
+
+                updateImageView(convertedBitmapDrawable)
+                imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
+                    val bitmap = convertedBitmapDrawable.bitmap
+                    addToImageStack(bitmap)
+                    bitmap
+                }
+
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Converting image to gray scale failed: ${e.message}", e)
+        } finally {
+            showProgressBar(false)
+        }
+    }
+
     private suspend fun convertToGrayScale() {
         try {
             showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
 
             if (checkEnoughTimePassed() && imageBitmap != null) {
-                withContext(Dispatchers.Default) {
-                    val grayScaleBitmapDrawable =
-                        convertToGrayScale(
-                            bitmap = imageBitmap!!,
-                            resources = resources
-                        )
+                val grayScaleBitmapDrawable = withContext(Dispatchers.Default) {
+                    convertToGrayScale(
+                        bitmap = imageBitmap!!,
+                        resources = resources
+                    )
+                }
 
-                    imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
-                        val bitmap = grayScaleBitmapDrawable.bitmap
-                        addToImageStack(bitmap)
-                        bitmap
-                    }
+                updateImageView(grayScaleBitmapDrawable)
+                binding.apply {
+                    textViewRgb.visibility = View.GONE
+                    textViewGrayScale.visibility = View.VISIBLE
+                }
 
-                    // Since we are doing UI operations at this line,
-                    // we return back to Main Dispatcher.
-                    withContext(Dispatchers.Main) {
-                        updateImageView(grayScaleBitmapDrawable)
-                        binding.apply {
-                            textViewRgb.visibility = View.GONE
-                            textViewGrayScale.visibility = View.VISIBLE
-                        }
-                    }
+                imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
+                    val bitmap = grayScaleBitmapDrawable.bitmap
+                    addToImageStack(bitmap)
+                    bitmap
                 }
             }
         } catch (e: Exception) {

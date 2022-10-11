@@ -18,8 +18,7 @@ fun resize(
 
     val rawInput = IntArray(bitmap.height * bitmap.width)
     bitmap.getPixels(
-        rawInput, 0, bitmap.width, 0, 0,
-        bitmap.width, bitmap.height
+        rawInput, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height
     )
 
     val rawOutput = IntArray(width * height)
@@ -40,8 +39,7 @@ fun resize(
     val oY16 = IntArray(height)
     max = oHeight - 1 shl 4
     for (newY in 0 until height) {
-        oY16[newY] = ((((newY shl 1) + 1) * oHeight shl 3) / height
-                - 8)
+        oY16[newY] = ((((newY shl 1) + 1) * oHeight shl 3) / height - 8)
         if (oY16[newY] < 0) {
             oY16[newY] = 0
         } else if (oY16[newY] > max) {
@@ -109,8 +107,8 @@ fun resize(
                 outGreen /= outColorWeight
                 outBlue /= outColorWeight
             }
-            rawOutput[newX + newY * width] = (outAlpha shl 24
-                    or (outRed shl 16) or (outGreen shl 8) or outBlue)
+            rawOutput[newX + newY * width] =
+                (outAlpha shl 24 or (outRed shl 16) or (outGreen shl 8) or outBlue)
         }
     }
     val outputBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)

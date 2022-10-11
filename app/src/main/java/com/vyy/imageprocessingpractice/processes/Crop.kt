@@ -8,12 +8,7 @@ import com.vyy.imageprocessingpractice.utils.lastProcessTime
 
 // Crop bitmap image and return as BitmapDrawable
 fun crop(
-    bitmap: Bitmap,
-    fromX: Int,
-    fromY: Int,
-    toX: Int,
-    toY: Int,
-    resources: Resources
+    bitmap: Bitmap, fromX: Int, fromY: Int, toX: Int, toY: Int, resources: Resources
 ): BitmapDrawable {
     // We use this variable to check if enough time has passed for a new operation.
     lastProcessTime = System.currentTimeMillis()
@@ -30,9 +25,6 @@ fun crop(
     // Get all pixels of the image, and load into bitmapPixels array.
     bitmap.getPixels(bitmapPixels, 0, width, 0, 0, width, height)
 
-    // Create empty bitmap with the new width and height
-    val croppedBitmap = Bitmap.createBitmap(newWidth, newHeight, Bitmap.Config.ARGB_8888)
-
     // Crop bitmapPixels array
     val croppedPixels = IntArray(newWidth * newHeight)
     var index = 0
@@ -43,6 +35,8 @@ fun crop(
         }
     }
 
+    // Create empty bitmap with the new width and height
+    val croppedBitmap = Bitmap.createBitmap(newWidth, newHeight, Bitmap.Config.ARGB_8888)
     croppedBitmap.setPixels(croppedPixels, 0, newWidth, 0, 0, newWidth, newHeight)
     return croppedBitmap.toDrawable(resources)
 }

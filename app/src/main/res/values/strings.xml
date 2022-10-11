@@ -21,4 +21,6 @@
     <string name="tox">toX</string>
     <string name="toy">toY</string>
     <string name="undo">Undo</string>
+    <string name="rgb_to_hsi">RGB -> HSI</string>
+    <string name="rgb_to_hsv">RGB -> HSV</string>
 </resources>
