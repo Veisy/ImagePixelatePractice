@@ -34,6 +34,8 @@ import com.vyy.imagemosaicing.R
 import com.vyy.imagemosaicing.databinding.ActivityMainBinding
 import com.vyy.imageprocessingpractice.processes.*
 import com.vyy.imageprocessingpractice.utils.Constants.FILENAME_FORMAT
+import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MAX
+import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MIN
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_HEIGHT
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_WIDTH
 import com.vyy.imageprocessingpractice.utils.Constants.REQUEST_CODE_PERMISSIONS
@@ -135,57 +137,36 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onClick(v: View?) {
         v?.let {
             when (v.id) {
-                R.id.imageButton_undo -> {
+                R.id.imageButton_undo, R.id.cameraButton, R.id.galleryButton -> {
                     cancelCurrentJobs()
                     hideGrayAndRgbTextView()
-                    removeFromImageStack()
+                    when (v.id) {
+                        R.id.imageButton_undo -> removeFromImageStack()
+                        R.id.cameraButton -> takePhoto()
+                        R.id.galleryButton -> pickPhoto()
+                    }
                 }
 
-                R.id.cameraButton -> {
-                    cancelCurrentJobs()
-                    hideGrayAndRgbTextView()
-                    takePhoto()
-                }
-
-                R.id.galleryButton -> {
-                    cancelCurrentJobs()
-                    hideGrayAndRgbTextView()
-                    pickPhoto()
-                }
-
-                R.id.imageButton_reflect_y_axis -> {
+                R.id.imageButton_reflect_y_axis, R.id.imageButton_reflect_x_axis -> {
                     cancelCurrentJobs(
                         isCheckGrayScaleCanceled = false,
                         isImageUriToBitmapCanceled = false
                     )
-
                     imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
-                        reflectBitmap(isReflectOnXAxis = false)
+                        reflectBitmap(isReflectOnXAxis = v.id == R.id.imageButton_reflect_x_axis)
                     }
                 }
 
-                R.id.imageButton_reflect_x_axis -> {
-                    cancelCurrentJobs(
-                        isCheckGrayScaleCanceled = false,
-                        isImageUriToBitmapCanceled = false
+                R.id.imageButton_resize, R.id.imageButton_crop, R.id.imageButton_pixelate  -> {
+                    if (v.id != R.id.imageButton_crop)
+                        clearInputTextFields()
+                    updateSelectedProcess(
+                        when (v.id) {
+                            R.id.imageButton_resize -> binding.imageButtonResize
+                            R.id.imageButton_crop -> binding.imageButtonCrop
+                            else -> binding.imageButtonPixelate
+                        }
                     )
-
-                    imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
-                        reflectBitmap(isReflectOnXAxis = true)
-                    }
-                }
-
-                R.id.imageButton_resize -> {
-                    clearInputTextFields()
-                    updateSelectedProcess(binding.imageButtonResize)
-                }
-
-                R.id.imageButton_crop -> {
-                    updateSelectedProcess(binding.imageButtonCrop)
-                }
-                R.id.imageButton_pixelate -> {
-                    clearInputTextFields()
-                    updateSelectedProcess(binding.imageButtonPixelate)
                 }
 
                 R.id.button_process -> {
@@ -200,7 +181,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 isCheckGrayScaleCanceled = false,
                                 isImageUriToBitmapCanceled = false
                             )
-
                             imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                                 when (selectedProcess) {
                                     R.id.imageButton_resize -> resizeBitmap(
@@ -224,7 +204,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 isCheckGrayScaleCanceled = false,
                                 isImageUriToBitmapCanceled = false
                             )
-
                             imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                                 cropBitmap(
                                     fromX.toDouble(),
@@ -237,27 +216,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     }
                 }
 
-                R.id.button_rgbToHsi -> {
+                R.id.button_rgbToHsi, R.id.button_rgbToHsv, R.id.textView_rgb  -> {
                     cancelCurrentJobs(isImageUriToBitmapCanceled = false)
                     imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
-                        convertColor(RGB_TO_HSI)
+                        convertColor(
+                            when(v.id) {
+                                R.id.button_rgbToHsi -> RGB_TO_HSI
+                                R.id.button_rgbToHsv -> RGB_TO_HSV
+                                else -> RGB_TO_GRAY
+                            }
+                        )
                     }
                 }
-
-                R.id.button_rgbToHsv -> {
-                    cancelCurrentJobs(isImageUriToBitmapCanceled = false)
-                    imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
-                        convertColor(RGB_TO_HSV)
-                    }
-                }
-
-                R.id.textView_rgb -> {
-                    cancelCurrentJobs(isImageUriToBitmapCanceled = false)
-                    imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
-                        convertColor(RGB_TO_GRAY)
-                    }
-                }
-
                 else -> {}
             }
         }
@@ -296,10 +266,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun pickPhoto() {
-        pickMedia?.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-    }
-
     private fun registerActivityResultCallbacks() {
         // Registers a photo picker activity launcher in single-select mode.
         pickMedia =
@@ -328,6 +294,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     Log.d(TAG, "No media selected")
                 }
             }
+    }
+
+    private fun pickPhoto() {
+        pickMedia?.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
 
     private fun startCamera() {
@@ -673,13 +643,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private suspend fun addToImageStack(bitmap: Bitmap) {
-        // If stack size is already 10, remove the first element
-        if (imageStack.size == 10) {
+        // If stack size is already IMAGE_STACK_SIZE_MAX, remove the first element
+        if (imageStack.size == IMAGE_STACK_SIZE_MAX) {
             imageStack.removeAt(0)
         }
 
         imageStack.addLast(bitmap)
-        if (imageStack.size > 1) {
+        if (imageStack.size > IMAGE_STACK_SIZE_MIN) {
             withContext(Dispatchers.Main) {
                 binding.imageButtonUndo.visibility = View.VISIBLE
             }
@@ -687,7 +657,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun removeFromImageStack() {
-        if (imageStack.size > 1) {
+        if (imageStack.size > IMAGE_STACK_SIZE_MIN) {
             imageStack.removeLast()
             imageUriToBitmapDeferred = this.lifecycleScope.async(Dispatchers.Default) {
                 imageStack.last()
@@ -697,7 +667,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 showProgressBar(false)
             }
         }
-        if (imageStack.size == 1) {
+        if (imageStack.size == IMAGE_STACK_SIZE_MIN) {
             binding.imageButtonUndo.visibility = View.GONE
         }
     }
@@ -715,9 +685,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 R.id.imageButton_resize -> getString(R.string.resize)
                 R.id.imageButton_crop -> getString(R.string.crop)
                 R.id.imageButton_pixelate -> getString(R.string.pixelate)
-                else -> {
-                    text.toString()
-                }
+                else -> text.toString()
             }
         }
 
