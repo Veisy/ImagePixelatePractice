@@ -6,6 +6,7 @@ object Constants {
 
     const val RGB_TO_HSI = "RGB_TO_HSI"
     const val RGB_TO_HSV = "RGB_TO_HSV"
+    const val RGB_TO_GRAY = "RGB_TO_GRAY"
 
     const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
     const val REQUEST_CODE_PERMISSIONS = 10

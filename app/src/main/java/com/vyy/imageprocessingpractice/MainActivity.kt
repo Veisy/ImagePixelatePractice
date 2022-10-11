@@ -37,6 +37,7 @@ import com.vyy.imageprocessingpractice.utils.Constants.FILENAME_FORMAT
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_HEIGHT
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_WIDTH
 import com.vyy.imageprocessingpractice.utils.Constants.REQUEST_CODE_PERMISSIONS
+import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_GRAY
 import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_HSI
 import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_HSV
 import com.vyy.imageprocessingpractice.utils.InputFilterMinMax
@@ -152,13 +153,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     pickPhoto()
                 }
 
-                R.id.textView_rgb -> {
-                    cancelCurrentJobs(isImageUriToBitmapCanceled = false)
-                    imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
-                        convertToGrayScale()
-                    }
-                }
-
                 R.id.imageButton_reflect_y_axis -> {
                     cancelCurrentJobs(
                         isCheckGrayScaleCanceled = false,
@@ -254,6 +248,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     cancelCurrentJobs(isImageUriToBitmapCanceled = false)
                     imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                         convertColor(RGB_TO_HSV)
+                    }
+                }
+
+                R.id.textView_rgb -> {
+                    cancelCurrentJobs(isImageUriToBitmapCanceled = false)
+                    imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
+                        convertColor(RGB_TO_GRAY)
                     }
                 }
 
@@ -603,7 +604,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                             bitmap = imageBitmap!!,
                             resources = resources
                         )
-                        else -> rgbToHsv(
+                        RGB_TO_HSV -> rgbToHsv(
+                            bitmap = imageBitmap!!,
+                            resources = resources
+                        )
+                        else -> rgbToGray(
                             bitmap = imageBitmap!!,
                             resources = resources
                         )
@@ -619,39 +624,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Converting image to gray scale failed: ${e.message}", e)
-        } finally {
-            showProgressBar(false)
-        }
-    }
-
-    private suspend fun convertToGrayScale() {
-        try {
-            showProgressBar(true)
-            imageBitmap = imageUriToBitmapDeferred?.await()
-
-            if (checkEnoughTimePassed() && imageBitmap != null) {
-                val grayScaleBitmapDrawable = withContext(Dispatchers.Default) {
-                    convertToGrayScale(
-                        bitmap = imageBitmap!!,
-                        resources = resources
-                    )
-                }
-
-                updateImageView(grayScaleBitmapDrawable)
-                binding.apply {
-                    textViewRgb.visibility = View.GONE
-                    textViewGrayScale.visibility = View.VISIBLE
-                }
-
-                imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
-                    val bitmap = grayScaleBitmapDrawable.bitmap
-                    addToImageStack(bitmap)
-                    bitmap
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Converting image to gray scale failed: ${e.message}", e)
+            Log.e(TAG, "Converting image color failed: ${e.message}", e)
         } finally {
             showProgressBar(false)
         }
@@ -661,16 +634,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         checkGrayScaleJob = this.lifecycleScope.launch {
             imageBitmap = imageUriToBitmapDeferred?.await()
             imageBitmap?.let { bitmap ->
-                withContext(Dispatchers.Default) {
-                    val isGrayScale = isGrayScale(bitmap)
+                val isGrayScale = withContext(Dispatchers.Default) {
+                    isGrayScale(bitmap)
+                }
 
-                    withContext(Dispatchers.Main) {
-                        binding.apply {
-                            textViewGrayScale.visibility =
-                                if (isGrayScale) View.VISIBLE else View.GONE
-                            textViewRgb.visibility = if (!isGrayScale) View.VISIBLE else View.GONE
-                        }
-                    }
+                binding.apply {
+                    textViewGrayScale.visibility =
+                        if (isGrayScale) View.VISIBLE else View.GONE
+                    textViewRgb.visibility = if (!isGrayScale) View.VISIBLE else View.GONE
                 }
             }
         }
