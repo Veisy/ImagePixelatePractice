@@ -33,6 +33,7 @@ import com.bumptech.glide.Glide
 import com.vyy.imagemosaicing.R
 import com.vyy.imagemosaicing.databinding.ActivityMainBinding
 import com.vyy.imageprocessingpractice.processes.*
+import com.vyy.imageprocessingpractice.utils.Constants.AVERAGE_FILTER
 import com.vyy.imageprocessingpractice.utils.Constants.FILENAME_FORMAT
 import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MAX
 import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MIN
@@ -137,6 +138,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             buttonMinFilter.setOnClickListener(this@MainActivity)
             buttonMaxFilter.setOnClickListener(this@MainActivity)
             buttonMedianFilter.setOnClickListener(this@MainActivity)
+            buttonAverageFilter.setOnClickListener(this@MainActivity)
         }
     }
 
@@ -235,14 +237,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     }
                 }
 
-                R.id.button_minFilter, R.id.button_maxFilter, R.id.button_medianFilter -> {
+                R.id.button_minFilter, R.id.button_maxFilter, R.id.button_medianFilter, R.id.button_averageFilter -> {
                     cancelCurrentJobs(isImageUriToBitmapCanceled = false)
                     imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                         filterBitmap(
                             when (v.id) {
                                 R.id.button_minFilter -> MIN_FILTER
                                 R.id.button_maxFilter -> MAX_FILTER
-                                else -> MEDIAN_FILTER
+                                R.id.button_medianFilter -> MEDIAN_FILTER
+                                else -> AVERAGE_FILTER
                             }
                         )
                     }
@@ -599,7 +602,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                             bitmap = imageBitmap!!,
                             resources = resources
                         )
-                        else -> medianFilter(
+                        MEDIAN_FILTER -> medianFilter(
+                            bitmap = imageBitmap!!,
+                            resources = resources
+                        )
+                        else -> averageFilter(
                             bitmap = imageBitmap!!,
                             resources = resources
                         )
@@ -814,7 +821,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 buttonRgbToHsi,
                 buttonMinFilter,
                 buttonMaxFilter,
-                buttonMedianFilter
+                buttonMedianFilter,
+                buttonAverageFilter
             )
             clickableViews.forEach { it.isEnabled = !isShown }
         }

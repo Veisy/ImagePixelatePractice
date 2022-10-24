@@ -14,6 +14,7 @@ object Constants {
     const val MAX_FILTER = "MAX_FILTER"
     const val MIN_FILTER = "MIN_FILTER"
     const val MEDIAN_FILTER = "MEDIAN_FILTER"
+    const val AVERAGE_FILTER = "AVERAGE_FILTER"
 
     const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
     const val REQUEST_CODE_PERMISSIONS = 10
