@@ -36,8 +36,11 @@ import com.vyy.imageprocessingpractice.processes.*
 import com.vyy.imageprocessingpractice.utils.Constants.FILENAME_FORMAT
 import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MAX
 import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MIN
+import com.vyy.imageprocessingpractice.utils.Constants.MAX_FILTER
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_HEIGHT
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_WIDTH
+import com.vyy.imageprocessingpractice.utils.Constants.MEDIAN_FILTER
+import com.vyy.imageprocessingpractice.utils.Constants.MIN_FILTER
 import com.vyy.imageprocessingpractice.utils.Constants.REQUEST_CODE_PERMISSIONS
 import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_GRAY
 import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_HSI
@@ -131,6 +134,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             imageButtonUndo.setOnClickListener(this@MainActivity)
             buttonRgbToHsi.setOnClickListener(this@MainActivity)
             buttonRgbToHsv.setOnClickListener(this@MainActivity)
+            buttonMinFilter.setOnClickListener(this@MainActivity)
+            buttonMaxFilter.setOnClickListener(this@MainActivity)
+            buttonMedianFilter.setOnClickListener(this@MainActivity)
         }
     }
 
@@ -157,7 +163,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     }
                 }
 
-                R.id.imageButton_resize, R.id.imageButton_crop, R.id.imageButton_pixelate  -> {
+                R.id.imageButton_resize, R.id.imageButton_crop, R.id.imageButton_pixelate -> {
                     if (v.id != R.id.imageButton_crop)
                         clearInputTextFields()
                     updateSelectedProcess(
@@ -216,14 +222,27 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     }
                 }
 
-                R.id.button_rgbToHsi, R.id.button_rgbToHsv, R.id.textView_rgb  -> {
+                R.id.button_rgbToHsi, R.id.button_rgbToHsv, R.id.textView_rgb -> {
                     cancelCurrentJobs(isImageUriToBitmapCanceled = false)
                     imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                         convertColor(
-                            when(v.id) {
+                            when (v.id) {
                                 R.id.button_rgbToHsi -> RGB_TO_HSI
                                 R.id.button_rgbToHsv -> RGB_TO_HSV
                                 else -> RGB_TO_GRAY
+                            }
+                        )
+                    }
+                }
+
+                R.id.button_minFilter, R.id.button_maxFilter, R.id.button_medianFilter -> {
+                    cancelCurrentJobs(isImageUriToBitmapCanceled = false)
+                    imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
+                        filterBitmap(
+                            when (v.id) {
+                                R.id.button_minFilter -> MIN_FILTER
+                                R.id.button_maxFilter -> MAX_FILTER
+                                else -> MEDIAN_FILTER
                             }
                         )
                     }
@@ -562,6 +581,46 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private suspend fun filterBitmap(filterName: String) {
+        try {
+            showProgressBar(true)
+            imageBitmap = imageUriToBitmapDeferred?.await()
+
+            if (checkEnoughTimePassed() && imageBitmap != null) {
+                // Since this operation takes time, we use Dispatchers.Default,
+                // which is optimized for time consuming calculations.
+                val filteredBitmapDrawable = withContext(Dispatchers.Default) {
+                    when (filterName) {
+                        MIN_FILTER -> minFilter(
+                            bitmap = imageBitmap!!,
+                            resources = resources
+                        )
+                        MAX_FILTER -> maxFilter(
+                            bitmap = imageBitmap!!,
+                            resources = resources
+                        )
+                        else -> medianFilter(
+                            bitmap = imageBitmap!!,
+                            resources = resources
+                        )
+                    }
+                }
+
+                updateImageView(filteredBitmapDrawable)
+
+                imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
+                    val bitmap = filteredBitmapDrawable.bitmap
+                    addToImageStack(bitmap)
+                    bitmap
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Filtering bitmap failed: ${e.message}", e)
+        } finally {
+            showProgressBar(false)
+        }
+    }
+
     private suspend fun convertColor(conversionName: String) {
         try {
             showProgressBar(true)
@@ -578,7 +637,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                             bitmap = imageBitmap!!,
                             resources = resources
                         )
-                        else ->  {
+                        else -> {
                             val grayBitmap = rgbToGray(
                                 bitmap = imageBitmap!!,
                                 resources = resources
@@ -750,7 +809,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 imageButtonReflectXAxis,
                 imageButtonResize,
                 imageButtonCrop,
-                imageButtonPixelate
+                imageButtonPixelate,
+                buttonRgbToHsv,
+                buttonRgbToHsi,
+                buttonMinFilter,
+                buttonMaxFilter,
+                buttonMedianFilter
             )
             clickableViews.forEach { it.isEnabled = !isShown }
         }

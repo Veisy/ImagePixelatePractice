@@ -23,4 +23,7 @@
     <string name="undo">Undo</string>
     <string name="rgb_to_hsi">RGB -> HSI</string>
     <string name="rgb_to_hsv">RGB -> HSV</string>
+    <string name="min_filter">MIN FILTER</string>
+    <string name="max_filter">MAX FILTER</string>
+    <string name="median_filter">MEDIAN FILTER</string>
 </resources>

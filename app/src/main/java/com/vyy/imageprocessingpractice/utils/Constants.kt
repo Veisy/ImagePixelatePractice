@@ -11,6 +11,10 @@ object Constants {
     const val RGB_TO_HSV = "RGB_TO_HSV"
     const val RGB_TO_GRAY = "RGB_TO_GRAY"
 
+    const val MAX_FILTER = "MAX_FILTER"
+    const val MIN_FILTER = "MIN_FILTER"
+    const val MEDIAN_FILTER = "MEDIAN_FILTER"
+
     const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
     const val REQUEST_CODE_PERMISSIONS = 10
 }
