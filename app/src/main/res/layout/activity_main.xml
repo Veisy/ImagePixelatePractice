@@ -219,7 +219,7 @@
         android:id="@+id/view_separatorLine_vertical"
         android:layout_width="2dp"
         android:layout_height="0dp"
-        android:background="@color/gray_level_5"
+        android:background="@color/gray_level_6"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/button_process"
         app:layout_constraintEnd_toEndOf="@id/guideline4"
@@ -253,9 +253,9 @@
     <View
         android:id="@+id/view_separatorLine_horizontal3"
         android:layout_width="0dp"
-        android:layout_height="5dp"
+        android:layout_height="2dp"
         android:layout_marginTop="@dimen/margin_small"
-        android:background="@drawable/shadow_background"
+        android:background="@color/gray_level_6"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="@id/frame"
         app:layout_constraintStart_toStartOf="@id/frame"
@@ -363,7 +363,7 @@
         android:hint="@string/fromx"
         android:visibility="gone"
         app:layout_constraintEnd_toStartOf="@id/textInputLayout_fromY"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal2">
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal3">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_fromX"
@@ -377,7 +377,7 @@
         android:hint="@string/fromy"
         android:visibility="gone"
         app:layout_constraintEnd_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal2">
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal3">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_fromY"
@@ -391,7 +391,7 @@
         android:hint="@string/tox"
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal2">
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal3">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_toX"
@@ -405,7 +405,7 @@
         android:hint="@string/toy"
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@id/textInputLayout_toX"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal2">
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal3">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_toY"

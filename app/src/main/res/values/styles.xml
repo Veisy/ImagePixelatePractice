@@ -1,13 +1,4 @@
 <resources>
-    <style name="TextViewStyle">
-        <item name="android:gravity">center</item>
-        <item name="android:paddingStart">@dimen/margin_medium</item>
-        <item name="android:paddingTop">@dimen/padding_small</item>
-        <item name="android:paddingEnd">@dimen/margin_medium</item>
-        <item name="android:paddingBottom">@dimen/padding_small</item>
-        <item name="android:textColor">@color/colorPrimary</item>
-        <item name="android:textStyle">bold</item>
-    </style>
 
     <style name="textInputEditTextStyle">
         <item name="android:layout_width">match_parent</item>
