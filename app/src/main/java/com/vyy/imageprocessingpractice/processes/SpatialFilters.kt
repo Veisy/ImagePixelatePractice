@@ -49,8 +49,8 @@ private fun getMinPixel(pixels: IntArray, width: Int, x: Int, y: Int): Int {
     var minGreen = 255
     var minBlue = 255
 
-    for (i in -1..1) {
-        for (j in -1..1) {
+    for (i in -2..2) {
+        for (j in -2..2) {
             val index = (y + i) * width + (x + j)
             if (index < 0 || index >= pixels.size) continue
             val pixel = pixels[index]
@@ -72,8 +72,8 @@ private fun getMaxPixel(pixels: IntArray, width: Int, x: Int, y: Int): Int {
     var maxGreen = 0
     var maxBlue = 0
 
-    for (i in -1..1) {
-        for (j in -1..1) {
+    for (i in -2..2) {
+        for (j in -2..2) {
             val index = (y + i) * width + (x + j)
             if (index < 0 || index >= pixels.size) continue
             val pixel = pixels[index]
@@ -91,21 +91,23 @@ private fun getMaxPixel(pixels: IntArray, width: Int, x: Int, y: Int): Int {
 
 // Get the median pixel value of the 3x3 neighborhood
 private fun getMedianPixel(pixels: IntArray, width: Int, x: Int, y: Int): Int {
-    val reds = mutableListOf<Int>()
-    val greens = mutableListOf<Int>()
-    val blues = mutableListOf<Int>()
+    val reds = IntArray(25)
+    val greens = IntArray(25)
+    val blues = IntArray(25)
 
-    for (i in -1..1) {
-        for (j in -1..1) {
-            val index = (y + i) * width + (x + j)
-            if (index >= 0 && index < pixels.size) {
-                val pixel = pixels[index]
+    var squareIndex = 0
+    for (i in -2..2) {
+        for (j in -2..2) {
+            val imageIndex = (y + i) * width + (x + j)
+            if (imageIndex >= 0 && imageIndex < pixels.size) {
+                val pixel = pixels[imageIndex]
                 val red = pixel shr 16 and 0xFF
                 val green = pixel shr 8 and 0xFF
                 val blue = pixel and 0xFF
-                reds.add(red)
-                greens.add(green)
-                blues.add(blue)
+                reds[squareIndex] = red
+                greens[squareIndex] = green
+                blues[squareIndex] = blue
+                squareIndex++
             }
         }
     }
@@ -114,9 +116,9 @@ private fun getMedianPixel(pixels: IntArray, width: Int, x: Int, y: Int): Int {
     greens.sort()
     blues.sort()
 
-    val medianRed = reds[4]
-    val medianGreen = greens[4]
-    val medianBlue = blues[4]
+    val medianRed = reds[12]
+    val medianGreen = greens[12]
+    val medianBlue = blues[12]
 
     return 0xFF000000.toInt() or (medianRed shl 16) or (medianGreen shl 8) or medianBlue
 }
@@ -127,8 +129,8 @@ private fun getAveragePixel(pixels: IntArray, width: Int, x: Int, y: Int): Int {
     var green = 0
     var blue = 0
 
-    for (i in -1..1) {
-        for (j in -1..1) {
+    for (i in -2..2) {
+        for (j in -2..2) {
             val index = (y + i) * width + (x + j)
             if (index < 0 || index >= pixels.size) continue
             val pixel = pixels[index]
@@ -138,9 +140,9 @@ private fun getAveragePixel(pixels: IntArray, width: Int, x: Int, y: Int): Int {
         }
     }
 
-    red /= 9
-    green /= 9
-    blue /= 9
+    red /= 25
+    green /= 25
+    blue /= 25
 
     return 0xff000000.toInt() or (red shl 16) or (green shl 8) or blue
 }
