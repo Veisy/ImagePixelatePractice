@@ -223,6 +223,50 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@id/button_medianFilter"
                 app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/button_laplacianFilter"
+                style="@style/normalButtonStyle"
+                android:text="@string/laplacian_filter"
+                android:textColor="@color/colorPrimaryVariant"
+                android:textSize="@dimen/textSize_small"
+                app:backgroundTint="@color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/button_averageFilter"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/button_sobelGradient"
+                style="@style/normalButtonStyle"
+                android:text="@string/sobel_gradient"
+                android:textColor="@color/colorPrimaryVariant"
+                android:textSize="@dimen/textSize_small"
+                app:backgroundTint="@color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/button_laplacianFilter"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/button_gammaTransformation"
+                style="@style/normalButtonStyle"
+                android:text="@string/gamma_transformation"
+                android:textColor="@color/colorPrimaryVariant"
+                android:textSize="@dimen/textSize_small"
+                app:backgroundTint="@color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/button_sobelGradient"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/button_specialOperation"
+                style="@style/normalButtonStyle"
+                android:text="@string/special_operation"
+                android:textColor="@color/colorPrimaryVariant"
+                android:textSize="@dimen/textSize_small"
+                app:backgroundTint="@color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/button_gammaTransformation"
+                app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </HorizontalScrollView>
 

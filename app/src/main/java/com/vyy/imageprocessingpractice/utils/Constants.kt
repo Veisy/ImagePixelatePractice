@@ -15,6 +15,9 @@ object Constants {
     const val MIN_FILTER = "MIN_FILTER"
     const val MEDIAN_FILTER = "MEDIAN_FILTER"
     const val AVERAGE_FILTER = "AVERAGE_FILTER"
+    const val LAPLACIAN_FILTER = "LAPLACIAN_FILTER"
+    const val SOBEL_GRADIENT = "SOBEL_GRADIENT"
+    const val GAMMA_TRANSFORMATION = "GAMMA_TRANSFORMATION"
 
     const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
     const val REQUEST_CODE_PERMISSIONS = 10

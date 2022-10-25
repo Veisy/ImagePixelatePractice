@@ -26,4 +26,8 @@
     <string name="max_filter">MAX FILTER</string>
     <string name="median_filter">MEDIAN FILTER</string>
     <string name="average_filter">AVERAGE FILTER</string>
+    <string name="laplacian_filter">LAPLACIAN FILTER</string>
+    <string name="sobel_gradient">SOBEL GRADIENT</string>
+    <string name="special_operation">SPECIAL OPERATION</string>
+    <string name="gamma_transformation">GAMMA TRANSFORMATION</string>
 </resources>
