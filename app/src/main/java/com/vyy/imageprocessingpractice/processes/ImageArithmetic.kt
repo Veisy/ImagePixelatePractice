@@ -64,5 +64,5 @@ private fun add(a: Int, b: Int, ): Int {
 }
 
 private fun multiply(a: Int, b: Int, ): Int {
-    return a * b
+    return (a * b) / 255
 }

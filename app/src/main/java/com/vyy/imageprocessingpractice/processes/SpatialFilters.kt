@@ -239,18 +239,22 @@ private fun getSobelGradientPixel(pixels: IntArray, width: Int, x: Int, y: Int):
 }
 
 private fun getGammaPixel(pixels: IntArray, width: Int, x: Int, y: Int): Int {
-    val gamma = 2.5
+    val gamma = 0.5
 
     val index = y * width + x
     if (index < 0 || index >= pixels.size) return 0
     val pixel = pixels[index]
 
-    val red = (255 * (pixel shr 16 and 0xFF) / 255.0).pow(gamma)
-    val green = (255 * (pixel shr 8 and 0xFF) / 255.0).pow(gamma)
-    val blue = (255 * (pixel and 0xFF) / 255.0).pow(gamma)
+    val red = pixel shr 16 and 0xFF
+    val green = pixel shr 8 and 0xFF
+    val blue = pixel and 0xFF
 
-    return 0xFF000000.toInt() or (red.toInt().coerceAtMost(255) shl 16) or (green.toInt()
-        .coerceAtMost(255) shl 8) or blue.toInt().coerceAtMost(255)
+    val newRed = (red / 255.0).pow(gamma) * 255
+    val newGreen = (green / 255.0).pow(gamma) * 255
+    val newBlue = (blue / 255.0).pow(gamma) * 255
+
+    return 0xFF000000.toInt() or (newRed.toInt().coerceAtMost(255) shl 16) or (newGreen.toInt()
+        .coerceAtMost(255) shl 8) or newBlue.toInt().coerceAtMost(255)
 }
 
 

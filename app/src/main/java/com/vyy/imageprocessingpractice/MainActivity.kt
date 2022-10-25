@@ -15,6 +15,7 @@ import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.ImageButton
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -650,8 +651,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 // Update imageView with list of images with 3 second delay
                 listOfBitmapDrawables.forEachIndexed { index, bitmapDrawable ->
                     updateImageView(bitmapDrawable)
-                    if (index < listOfBitmapDrawables.size - 1)
+                    Toast.makeText(
+                        this,
+                        "Image ${index + 1} of ${listOfBitmapDrawables.size}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    if (index < listOfBitmapDrawables.size - 1) {
                         delay(3000)
+                    }
                 }
             }
         } catch (e: Exception) {
