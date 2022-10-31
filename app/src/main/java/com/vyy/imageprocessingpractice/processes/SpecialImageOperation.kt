@@ -7,7 +7,7 @@ import android.graphics.drawable.BitmapDrawable
 import androidx.core.graphics.drawable.toDrawable
 import multiplyImages
 
-fun specialImageOperation(originalBitmap: Bitmap, resources: Resources) : List<BitmapDrawable> {
+fun specialImageOperation(originalBitmap: Bitmap, resources: Resources): List<BitmapDrawable> {
 
     val a = originalBitmap.toDrawable(resources)
 

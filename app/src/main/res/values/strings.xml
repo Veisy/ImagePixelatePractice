@@ -30,4 +30,5 @@
     <string name="sobel_gradient">SOBEL GRADIENT</string>
     <string name="special_operation">SPECIAL OPERATION</string>
     <string name="gamma_transformation">GAMMA TRANSFORMATION</string>
+    <string name="lung_segmentation">LUNG SEGMENTATION</string>
 </resources>

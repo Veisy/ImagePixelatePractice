@@ -10,33 +10,33 @@ import kotlin.math.sqrt
 
 // Apply min filter to reduce salt and pepper noise
 fun minFilter(bitmap: Bitmap, resources: Resources): BitmapDrawable =
-    spatialFilter(bitmap, resources, ::getMinPixel)
+    applyFilter(bitmap, resources, ::getMinPixel)
 
 // Apply max filter to reduce salt and pepper noise
 fun maxFilter(bitmap: Bitmap, resources: Resources): BitmapDrawable =
-    spatialFilter(bitmap, resources, ::getMaxPixel)
+    applyFilter(bitmap, resources, ::getMaxPixel)
 
 // Apply median filter to reduce salt and pepper noise
 fun medianFilter(bitmap: Bitmap, resources: Resources): BitmapDrawable =
-    spatialFilter(bitmap, resources, ::getMedianPixel)
+    applyFilter(bitmap, resources, ::getMedianPixel)
 
 // Apply average filter to reduce salt and pepper noise
 fun averageFilter(bitmap: Bitmap, resources: Resources): BitmapDrawable =
-    spatialFilter(bitmap, resources, ::getAveragePixel)
+    applyFilter(bitmap, resources, ::getAveragePixel)
 
 // Apply laplacian filter to sharpen the image
 fun laplacianFilter(bitmap: Bitmap, resources: Resources): BitmapDrawable =
-    spatialFilter(bitmap, resources, ::getLaplacianPixel)
+    applyFilter(bitmap, resources, ::getLaplacianPixel)
 
 fun sobelGradientFilter(bitmap: Bitmap, resources: Resources): BitmapDrawable =
-    spatialFilter(bitmap, resources, ::getSobelGradientPixel)
+    applyFilter(bitmap, resources, ::getSobelGradientPixel)
 
 // Apply Power-Law (Gamma) Transform
 fun gammaTransformation(bitmap: Bitmap, resources: Resources): BitmapDrawable =
-    spatialFilter(bitmap, resources, ::getGammaPixel)
+    applyFilter(bitmap, resources, ::getGammaPixel)
 
 // Take filter function as parameter and apply it to each pixel.
-private fun spatialFilter(
+private fun applyFilter(
     bitmap: Bitmap, resources: Resources, filterFunction: (IntArray, Int, Int, Int) -> Int
 ): BitmapDrawable {
     // We use this variable to check if enough time has passed for a new operation.

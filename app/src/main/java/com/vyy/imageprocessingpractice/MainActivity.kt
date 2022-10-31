@@ -35,6 +35,7 @@ import com.vyy.imagemosaicing.R
 import com.vyy.imagemosaicing.databinding.ActivityMainBinding
 import com.vyy.imageprocessingpractice.processes.*
 import com.vyy.imageprocessingpractice.utils.Constants.AVERAGE_FILTER
+import com.vyy.imageprocessingpractice.utils.Constants.LUNG_SEGMENTATION
 import com.vyy.imageprocessingpractice.utils.Constants.FILENAME_FORMAT
 import com.vyy.imageprocessingpractice.utils.Constants.GAMMA_TRANSFORMATION
 import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MAX
@@ -50,6 +51,7 @@ import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_GRAY
 import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_HSI
 import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_HSV
 import com.vyy.imageprocessingpractice.utils.Constants.SOBEL_GRADIENT
+import com.vyy.imageprocessingpractice.utils.Constants.DEFAULT_SPECIAL_OPERATION
 import com.vyy.imageprocessingpractice.utils.InputFilterMinMax
 import com.vyy.imageprocessingpractice.utils.checkEnoughTimePassed
 import kotlinx.coroutines.*
@@ -145,6 +147,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             buttonSobelGradient.setOnClickListener(this@MainActivity)
             buttonGammaTransformation.setOnClickListener(this@MainActivity)
             buttonSpecialOperation.setOnClickListener(this@MainActivity)
+            buttonLungSegmentation.setOnClickListener(this@MainActivity)
         }
     }
 
@@ -245,12 +248,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     }
                 }
 
-                R.id.button_specialOperation -> {
+                R.id.button_specialOperation, R.id.button_lungSegmentation -> {
                     cancelCurrentJobs(isImageUriToBitmapCanceled = false)
                     imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
-                        specialBitmapOperation()
+                        specialBitmapOperation(
+                            when (v.id) {
+                                R.id.button_specialOperation -> DEFAULT_SPECIAL_OPERATION
+                                else -> LUNG_SEGMENTATION
+                            }
+                        )
                     }
                 }
+
                 else -> {}
             }
         }
@@ -634,7 +643,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private suspend fun specialBitmapOperation() {
+    private suspend fun specialBitmapOperation(specialOperationName: String) {
         try {
             showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
@@ -643,21 +652,32 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 // Since this operation takes time, we use Dispatchers.Default,
                 // which is optimized for time consuming calculations.
                 val listOfBitmapDrawables = withContext(Dispatchers.Default) {
-                    specialImageOperation(
-                        originalBitmap = imageBitmap!!, resources = resources
-                    )
+                    when (specialOperationName) {
+                        DEFAULT_SPECIAL_OPERATION -> specialImageOperation(
+                            originalBitmap = imageBitmap!!, resources = resources
+                        )
+                        else -> lungOperations(
+                            originalBitmap = imageBitmap!!, resources = resources
+                        )
+                    }
+                }
+
+                imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
+                    val bitmap = listOfBitmapDrawables.last().bitmap
+                    bitmap
                 }
 
                 // Update imageView with list of images with 3 second delay
                 listOfBitmapDrawables.forEachIndexed { index, bitmapDrawable ->
                     updateImageView(bitmapDrawable)
+                    addToImageStack(bitmapDrawable.bitmap)
                     Toast.makeText(
                         this,
                         "Image ${index + 1} of ${listOfBitmapDrawables.size}",
                         Toast.LENGTH_SHORT
                     ).show()
                     if (index < listOfBitmapDrawables.size - 1) {
-                        delay(3000)
+                        delay(2000)
                     }
                 }
             }

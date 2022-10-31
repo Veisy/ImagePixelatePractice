@@ -54,8 +54,8 @@
         android:text="@string/gray"
         android:textStyle="bold"
         android:visibility="gone"
-        app:layout_constraintStart_toStartOf="@id/frame"
         app:layout_constraintBottom_toTopOf="@id/guideline3"
+        app:layout_constraintStart_toStartOf="@id/frame"
         tools:visibility="visible" />
 
     <TextView
@@ -89,9 +89,9 @@
             <ImageButton
                 android:id="@+id/imageButton_reflect_y_axis"
                 style="@style/normalButtonStyle"
-                android:padding="@dimen/padding_medium"
                 android:background="@color/transparent"
                 android:contentDescription="@string/reflect_on_y_axis"
+                android:padding="@dimen/padding_medium"
                 android:src="@drawable/ic_flip"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -134,9 +134,9 @@
             <ImageButton
                 android:id="@+id/imageButton_pixelate"
                 style="@style/normalButtonStyle"
-                android:padding="@dimen/padding_medium"
                 android:background="@drawable/image_button_unselected_background"
                 android:contentDescription="@string/pixelate_image"
+                android:padding="@dimen/padding_medium"
                 android:src="@drawable/ic_pixelate_24"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@id/imageButton_crop"
@@ -181,6 +181,17 @@
             android:layout_height="wrap_content">
 
             <Button
+                android:id="@+id/button_lungSegmentation"
+                style="@style/normalButtonStyle"
+                android:text="@string/lung_segmentation"
+                android:textColor="@color/colorPrimaryVariant"
+                android:textSize="@dimen/textSize_small"
+                app:backgroundTint="@color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
                 android:id="@+id/button_minFilter"
                 style="@style/normalButtonStyle"
                 android:text="@string/min_filter"
@@ -188,7 +199,7 @@
                 android:textSize="@dimen/textSize_small"
                 app:backgroundTint="@color/white"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintStart_toEndOf="@id/button_lungSegmentation"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <Button
@@ -289,18 +300,18 @@
         android:layout_marginTop="@dimen/margin_medium"
         android:background="@color/gray_level_6"
         android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@id/guideline3"
         app:layout_constraintEnd_toEndOf="@id/frame"
         app:layout_constraintStart_toStartOf="@id/frame"
-        app:layout_constraintTop_toTopOf="@id/guideline3"
-        app:layout_constraintBottom_toBottomOf="@id/guideline3"/>
+        app:layout_constraintTop_toTopOf="@id/guideline3" />
 
     <View
         android:id="@+id/view_separatorLine_horizontal2"
         android:layout_width="0dp"
         android:layout_height="2dp"
+        android:layout_marginTop="@dimen/margin_small"
         android:background="@color/gray_level_6"
         android:visibility="visible"
-        android:layout_marginTop="@dimen/margin_small"
         app:layout_constraintEnd_toEndOf="@id/frame"
         app:layout_constraintStart_toStartOf="@id/frame"
         app:layout_constraintTop_toBottomOf="@id/horizontalScrollView_processes" />

@@ -51,7 +51,8 @@ private fun imageArithmetic(
             val newGreen = if ((green1 + green2) > 255) 255 else arithmeticFunction(green1, green2)
             val newBlue = if ((blue1 + blue2) > 255) 255 else arithmeticFunction(blue1, blue2)
 
-            newPixels[y * width + x] = 0xff000000.toInt() or (newRed shl 16) or (newGreen shl 8) or newBlue
+            newPixels[y * width + x] =
+                0xff000000.toInt() or (newRed shl 16) or (newGreen shl 8) or newBlue
         }
     }
     // Set new pixels to the new bitmap
@@ -59,10 +60,10 @@ private fun imageArithmetic(
     return newBitmap.toDrawable(resources)
 }
 
-private fun add(a: Int, b: Int, ): Int {
+private fun add(a: Int, b: Int): Int {
     return a + b
 }
 
-private fun multiply(a: Int, b: Int, ): Int {
+private fun multiply(a: Int, b: Int): Int {
     return (a * b) / 255
 }
