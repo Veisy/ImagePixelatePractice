@@ -1,4 +1,4 @@
-package com.vyy.imageprocessingpractice
+package com.vyy.intelligenteye
 
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -15,7 +15,6 @@ import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.ImageButton
-import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,29 +30,16 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
-import com.vyy.imagemosaicing.R
-import com.vyy.imagemosaicing.databinding.ActivityMainBinding
-import com.vyy.imageprocessingpractice.processes.*
-import com.vyy.imageprocessingpractice.utils.Constants.AVERAGE_FILTER
-import com.vyy.imageprocessingpractice.utils.Constants.LUNG_SEGMENTATION
-import com.vyy.imageprocessingpractice.utils.Constants.FILENAME_FORMAT
-import com.vyy.imageprocessingpractice.utils.Constants.GAMMA_TRANSFORMATION
-import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MAX
-import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MIN
-import com.vyy.imageprocessingpractice.utils.Constants.LAPLACIAN_FILTER
-import com.vyy.imageprocessingpractice.utils.Constants.MAX_FILTER
-import com.vyy.imageprocessingpractice.utils.Constants.MAX_HEIGHT
-import com.vyy.imageprocessingpractice.utils.Constants.MAX_WIDTH
-import com.vyy.imageprocessingpractice.utils.Constants.MEDIAN_FILTER
-import com.vyy.imageprocessingpractice.utils.Constants.MIN_FILTER
-import com.vyy.imageprocessingpractice.utils.Constants.REQUEST_CODE_PERMISSIONS
-import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_GRAY
-import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_HSI
-import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_HSV
-import com.vyy.imageprocessingpractice.utils.Constants.SOBEL_GRADIENT
-import com.vyy.imageprocessingpractice.utils.Constants.DEFAULT_SPECIAL_OPERATION
-import com.vyy.imageprocessingpractice.utils.InputFilterMinMax
-import com.vyy.imageprocessingpractice.utils.checkEnoughTimePassed
+import com.vyy.intelligenteye.databinding.ActivityMainBinding
+import com.vyy.intelligenteye.processes.*
+import com.vyy.intelligenteye.utils.Constants.FILENAME_FORMAT
+import com.vyy.intelligenteye.utils.Constants.IMAGE_STACK_SIZE_MAX
+import com.vyy.intelligenteye.utils.Constants.IMAGE_STACK_SIZE_MIN
+import com.vyy.intelligenteye.utils.Constants.MAX_HEIGHT
+import com.vyy.intelligenteye.utils.Constants.MAX_WIDTH
+import com.vyy.intelligenteye.utils.Constants.REQUEST_CODE_PERMISSIONS
+import com.vyy.intelligenteye.utils.InputFilterMinMax
+import com.vyy.intelligenteye.utils.checkEnoughTimePassed
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -73,7 +59,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var imageStack: ArrayDeque<Bitmap> = ArrayDeque()
 
     private var imageProcessingJob: Job? = null
-    private var checkGrayScaleJob: Job? = null
     private var imageUriToBitmapDeferred: Deferred<Bitmap?>? = null
 
     private var selectedProcess: Int? = null
@@ -95,14 +80,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         checkPermissions()
 
-        // Default Image is Lenna.
+        // Default Image
         if (imageStack.size < 1) {
             imageUri = Uri.Builder().scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
                 .authority(resources.getResourcePackageName(R.drawable.lenna))
                 .appendPath(resources.getResourceTypeName(R.drawable.lenna))
                 .appendPath(resources.getResourceEntryName(R.drawable.lenna)).build()
             updateImageView(imageUri)
-            hideGrayAndRgbTextView()
 
             imageUriToBitmapDeferred = this.lifecycleScope.async(Dispatchers.Default) {
                 val bitmap = imageUri?.let { uriToBitmap(it) }
@@ -130,24 +114,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             cameraButton.setOnClickListener(this@MainActivity)
             buttonProcess.setOnClickListener(this@MainActivity)
             galleryButton.setOnClickListener(this@MainActivity)
-            textViewRgb.setOnClickListener(this@MainActivity)
             imageButtonReflectYAxis.setOnClickListener(this@MainActivity)
             imageButtonReflectXAxis.setOnClickListener(this@MainActivity)
             imageButtonResize.setOnClickListener(this@MainActivity)
             imageButtonCrop.setOnClickListener(this@MainActivity)
-            imageButtonPixelate.setOnClickListener(this@MainActivity)
             imageButtonUndo.setOnClickListener(this@MainActivity)
-            buttonRgbToHsi.setOnClickListener(this@MainActivity)
-            buttonRgbToHsv.setOnClickListener(this@MainActivity)
-            buttonMinFilter.setOnClickListener(this@MainActivity)
-            buttonMaxFilter.setOnClickListener(this@MainActivity)
-            buttonMedianFilter.setOnClickListener(this@MainActivity)
-            buttonAverageFilter.setOnClickListener(this@MainActivity)
-            buttonLaplacianFilter.setOnClickListener(this@MainActivity)
-            buttonSobelGradient.setOnClickListener(this@MainActivity)
-            buttonGammaTransformation.setOnClickListener(this@MainActivity)
-            buttonSpecialOperation.setOnClickListener(this@MainActivity)
-            buttonLungSegmentation.setOnClickListener(this@MainActivity)
         }
     }
 
@@ -156,7 +127,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             when (v.id) {
                 R.id.imageButton_undo, R.id.cameraButton, R.id.galleryButton -> {
                     cancelCurrentJobs()
-                    hideGrayAndRgbTextView()
                     when (v.id) {
                         R.id.imageButton_undo -> removeFromImageStack()
                         R.id.cameraButton -> takePhoto()
@@ -166,42 +136,41 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
                 R.id.imageButton_reflect_y_axis, R.id.imageButton_reflect_x_axis -> {
                     cancelCurrentJobs(
-                        isCheckGrayScaleCanceled = false, isImageUriToBitmapCanceled = false
+                        isImageUriToBitmapCanceled = false
                     )
+
                     imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                         reflectBitmap(isReflectOnXAxis = v.id == R.id.imageButton_reflect_x_axis)
                     }
                 }
 
-                R.id.imageButton_resize, R.id.imageButton_crop, R.id.imageButton_pixelate -> {
-                    if (v.id != R.id.imageButton_crop) clearInputTextFields()
+                R.id.imageButton_resize, R.id.imageButton_crop -> {
+                    cancelCurrentJobs(
+                        isImageUriToBitmapCanceled = false
+                    )
+
                     updateSelectedProcess(
                         when (v.id) {
                             R.id.imageButton_resize -> binding.imageButtonResize
-                            R.id.imageButton_crop -> binding.imageButtonCrop
-                            else -> binding.imageButtonPixelate
+                            else -> binding.imageButtonCrop
                         }
                     )
                 }
 
                 R.id.button_process -> {
-                    if (selectedProcess == R.id.imageButton_resize || selectedProcess == R.id.imageButton_pixelate) {
+                    cancelCurrentJobs(
+                        isImageUriToBitmapCanceled = false
+                    )
+
+                    if (selectedProcess == R.id.imageButton_resize) {
                         val width = binding.textInputEditTextWidth.text.toString()
                         val height = binding.textInputEditTextHeight.text.toString()
 
                         if (checkIfInputsValid(listOf(width, height))) {
-                            cancelCurrentJobs(
-                                isCheckGrayScaleCanceled = false, isImageUriToBitmapCanceled = false
-                            )
                             imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
-                                when (selectedProcess) {
-                                    R.id.imageButton_resize -> resizeBitmap(
-                                        width.toDouble(), height.toDouble()
-                                    )
-                                    R.id.imageButton_pixelate -> pixelateBitmap(
-                                        width.toDouble(), height.toDouble()
-                                    )
-                                }
+                                resizeBitmap(
+                                    width.toDouble(), height.toDouble()
+                                )
                             }
                         }
                     } else if (selectedProcess == R.id.imageButton_crop) {
@@ -210,9 +179,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         val toX = binding.textInputEditTextToX.text.toString()
                         val toY = binding.textInputEditTextToY.text.toString()
                         if (checkIfInputsValid(listOf(fromX, fromY, toX, toY))) {
-                            cancelCurrentJobs(
-                                isCheckGrayScaleCanceled = false, isImageUriToBitmapCanceled = false
-                            )
+
                             imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                                 cropBitmap(
                                     fromX.toDouble(),
@@ -225,53 +192,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     }
                 }
 
-                R.id.button_rgbToHsi, R.id.button_rgbToHsv, R.id.textView_rgb,
-                R.id.button_minFilter, R.id.button_maxFilter, R.id.button_medianFilter, R.id.button_averageFilter,
-                R.id.button_laplacianFilter, R.id.button_sobelGradient, R.id.button_gammaTransformation -> {
-                    cancelCurrentJobs(isImageUriToBitmapCanceled = false)
-                    imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
-                        filterOrTransformBitmap(
-                            when (v.id) {
-                                R.id.button_rgbToHsi -> RGB_TO_HSI
-                                R.id.button_rgbToHsv -> RGB_TO_HSV
-                                R.id.textView_rgb -> RGB_TO_GRAY
-                                R.id.button_minFilter -> MIN_FILTER
-                                R.id.button_maxFilter -> MAX_FILTER
-                                R.id.button_medianFilter -> MEDIAN_FILTER
-                                R.id.button_averageFilter -> AVERAGE_FILTER
-                                R.id.button_laplacianFilter -> LAPLACIAN_FILTER
-                                R.id.button_sobelGradient -> SOBEL_GRADIENT
-                                R.id.button_gammaTransformation -> GAMMA_TRANSFORMATION
-                                else -> RGB_TO_GRAY
-                            }
-                        )
-                    }
-                }
-
-                R.id.button_specialOperation, R.id.button_lungSegmentation -> {
-                    cancelCurrentJobs(isImageUriToBitmapCanceled = false)
-                    imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
-                        specialBitmapOperation(
-                            when (v.id) {
-                                R.id.button_specialOperation -> DEFAULT_SPECIAL_OPERATION
-                                else -> LUNG_SEGMENTATION
-                            }
-                        )
-                    }
-                }
-
                 else -> {}
             }
         }
     }
 
     private fun cancelCurrentJobs(
-        isImageProcessingCanceled: Boolean = true,
-        isCheckGrayScaleCanceled: Boolean = true,
-        isImageUriToBitmapCanceled: Boolean = true
+        isImageProcessingCanceled: Boolean = true, isImageUriToBitmapCanceled: Boolean = true
     ) {
         if (isImageProcessingCanceled && imageProcessingJob?.isActive == true) imageProcessingJob?.cancel()
-        if (isCheckGrayScaleCanceled && checkGrayScaleJob?.isActive == true) checkGrayScaleJob?.cancel()
         if (isImageUriToBitmapCanceled && imageUriToBitmapDeferred?.isActive == true) imageUriToBitmapDeferred?.cancel()
     }
 
@@ -310,7 +239,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         bitmap
                     }
 
-                    checkIfGrayScale()
                 } catch (e: Exception) {
                     Log.e(TAG, "Picking image from media failed: ${e.message}", e)
                 }
@@ -406,8 +334,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                             bitmap
                         }
 
-                        // Check if image is grayscale.
-                        checkIfGrayScale()
                     } catch (e: Exception) {
                         Log.e(TAG, "Loading image uri to ImageView failed: ${e.message}", e)
                     } finally {
@@ -419,48 +345,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             })
     }
 
-    // Decode Uri to Bitmap, and then use pixelate algorithm on the Bitmap.
-    private suspend fun pixelateBitmap(width: Double, height: Double) {
-        try {
-            showProgressBar(true)
-            imageBitmap = imageUriToBitmapDeferred?.await()
-
-            // Since this operation takes time, we use Dispatchers.Default,
-            // which is optimized for time consuming calculations.
-            if (checkEnoughTimePassed() && imageBitmap != null) {
-                val pixelatedBitmapDrawable = withContext(Dispatchers.Default) {
-                    invokePixelation(
-                        bitmap = imageBitmap!!,
-                        pixelWidth = (width.toInt()).coerceAtMost(imageBitmap!!.width),
-                        pixelHeight = (height.toInt()).coerceAtMost(imageBitmap!!.height),
-                        resources = resources
-                    )
-                }
-
-                updateImageView(pixelatedBitmapDrawable)
-
-                imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
-                    val bitmap = pixelatedBitmapDrawable.bitmap
-                    addToImageStack(bitmap)
-                    bitmap
-                }
-            } else {
-                Log.e(
-                    TAG, "Not enough time has passed to re-pixate, or ImageBitmap is null."
-                )
-            }
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Pixelating bitmap failed: ${e.message}", e)
-        } finally {
-            showProgressBar(false)
-        }
-    }
-
     private suspend fun reflectBitmap(isReflectOnXAxis: Boolean) {
         try {
             showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
+
+            updateSelectedProcess(
+                if (isReflectOnXAxis) {
+                    binding.imageButtonReflectXAxis
+                } else {
+                    binding.imageButtonReflectYAxis
+                }
+            )
 
             if (checkEnoughTimePassed() && imageBitmap != null) {
                 // Since this operation takes time, we use Dispatchers.Default,
@@ -560,134 +456,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private suspend fun filterOrTransformBitmap(filterOrTransformName: String) {
-        try {
-            showProgressBar(true)
-            imageBitmap = imageUriToBitmapDeferred?.await()
-
-            if (checkEnoughTimePassed() && imageBitmap != null) {
-                // Since this operation takes time, we use Dispatchers.Default,
-                // which is optimized for time consuming calculations.
-                val filteredBitmapDrawable = withContext(Dispatchers.Default) {
-                    when (filterOrTransformName) {
-                        MIN_FILTER -> minFilter(
-                            bitmap = imageBitmap!!, resources = resources
-                        )
-                        MAX_FILTER -> maxFilter(
-                            bitmap = imageBitmap!!, resources = resources
-                        )
-                        MEDIAN_FILTER -> medianFilter(
-                            bitmap = imageBitmap!!, resources = resources
-                        )
-                        AVERAGE_FILTER -> averageFilter(
-                            bitmap = imageBitmap!!, resources = resources
-                        )
-                        LAPLACIAN_FILTER -> laplacianFilter(
-                            bitmap = imageBitmap!!, resources = resources
-                        )
-                        SOBEL_GRADIENT -> sobelGradientFilter(
-                            bitmap = imageBitmap!!, resources = resources
-                        )
-                        GAMMA_TRANSFORMATION -> gammaTransformation(
-                            bitmap = imageBitmap!!, resources = resources
-                        )
-                        RGB_TO_HSI -> rgbToHsi(
-                            bitmap = imageBitmap!!, resources = resources
-                        )
-                        RGB_TO_HSV -> rgbToHsv(
-                            bitmap = imageBitmap!!, resources = resources
-                        )
-                        else -> {
-                            val grayBitmap = rgbToGray(
-                                bitmap = imageBitmap!!, resources = resources
-                            )
-                            withContext(Dispatchers.Main) {
-                                binding.apply {
-                                    textViewRgb.visibility = View.GONE
-                                    textViewGrayScale.visibility = View.VISIBLE
-                                }
-                            }
-                            grayBitmap
-                        }
-                    }
-                }
-
-                updateImageView(filteredBitmapDrawable)
-
-                imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
-                    val bitmap = filteredBitmapDrawable.bitmap
-                    addToImageStack(bitmap)
-                    bitmap
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Filtering-Transforming bitmap failed: ${e.message}", e)
-        } finally {
-            showProgressBar(false)
-        }
-    }
-
-    private fun checkIfGrayScale() {
-        checkGrayScaleJob = this.lifecycleScope.launch {
-            imageBitmap = imageUriToBitmapDeferred?.await()
-            imageBitmap?.let { bitmap ->
-                val isGrayScale = withContext(Dispatchers.Default) {
-                    isGrayScale(bitmap)
-                }
-
-                binding.apply {
-                    textViewGrayScale.visibility = if (isGrayScale) View.VISIBLE else View.GONE
-                    textViewRgb.visibility = if (!isGrayScale) View.VISIBLE else View.GONE
-                }
-            }
-        }
-    }
-
-    private suspend fun specialBitmapOperation(specialOperationName: String) {
-        try {
-            showProgressBar(true)
-            imageBitmap = imageUriToBitmapDeferred?.await()
-
-            if (checkEnoughTimePassed() && imageBitmap != null) {
-                // Since this operation takes time, we use Dispatchers.Default,
-                // which is optimized for time consuming calculations.
-                val listOfBitmapDrawables = withContext(Dispatchers.Default) {
-                    when (specialOperationName) {
-                        DEFAULT_SPECIAL_OPERATION -> specialImageOperation(
-                            originalBitmap = imageBitmap!!, resources = resources
-                        )
-                        else -> lungOperations(
-                            originalBitmap = imageBitmap!!, resources = resources
-                        )
-                    }
-                }
-
-                imageUriToBitmapDeferred = CoroutineScope(Dispatchers.Default).async {
-                    val bitmap = listOfBitmapDrawables.last().bitmap
-                    bitmap
-                }
-
-                // Update imageView with list of images with 3 second delay
-                listOfBitmapDrawables.forEachIndexed { index, bitmapDrawable ->
-                    updateImageView(bitmapDrawable)
-                    addToImageStack(bitmapDrawable.bitmap)
-                    Toast.makeText(
-                        this,
-                        "Image ${index + 1} of ${listOfBitmapDrawables.size}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    if (index < listOfBitmapDrawables.size - 1) {
-                        delay(2000)
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Special bitmap operation failed: ${e.message}", e)
-        } finally {
-            showProgressBar(false)
-        }
-    }
-
     private fun checkIfInputsValid(inputs: List<String>) = inputs.all { input ->
         input.isNotEmpty() && input.toDouble() > 0
     }
@@ -716,6 +484,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun removeFromImageStack() {
+        updateSelectedProcess(null)
+
         if (imageStack.size > IMAGE_STACK_SIZE_MIN) {
             imageStack.removeLast()
             imageUriToBitmapDeferred = this.lifecycleScope.async(Dispatchers.Default) {
@@ -731,18 +501,22 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun updateSelectedProcess(imageButton: ImageButton) {
-        val allImageButtons = listOf(
-            binding.imageButtonPixelate, binding.imageButtonResize, binding.imageButtonCrop
-        )
-        selectedProcess = imageButton.id
+    private fun updateSelectedProcess(imageButton: ImageButton?) {
+        clearInputTextFields()
 
-        binding.buttonProcess.apply {
-            text = when (imageButton.id) {
-                R.id.imageButton_resize -> getString(R.string.resize)
-                R.id.imageButton_crop -> getString(R.string.crop)
-                R.id.imageButton_pixelate -> getString(R.string.pixelate)
-                else -> text.toString()
+        val allImageButtons = listOf(
+            binding.imageButtonResize, binding.imageButtonCrop
+        )
+
+        selectedProcess = imageButton?.id
+
+        if (imageButton != null) {
+            binding.buttonProcess.apply {
+                text = when (imageButton.id) {
+                    R.id.imageButton_resize -> getString(R.string.resize)
+                    R.id.imageButton_crop -> getString(R.string.crop)
+                    else -> text.toString()
+                }
             }
         }
 
@@ -762,16 +536,26 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         )
         val widthAndHeightLayouts = listOf(
             binding.textInputLayoutWidth, binding.textInputLayoutHeight
-
         )
-        cropInputLayouts.forEach {
-            it.visibility = if (imageButton.id == R.id.imageButton_crop) View.VISIBLE else View.GONE
-        }
-        widthAndHeightLayouts.forEach {
-            it.visibility = if (imageButton.id == R.id.imageButton_crop) View.GONE else View.VISIBLE
+
+        if (imageButton != null && imageButton.id == R.id.imageButton_crop) {
+            cropInputLayouts.forEach {
+                it.visibility = View.VISIBLE
+            }
+        } else if (imageButton != null && imageButton.id == R.id.imageButton_resize) {
+            widthAndHeightLayouts.forEach {
+                it.visibility = View.VISIBLE
+            }
+        } else {
+            cropInputLayouts.forEach {
+                it.visibility = View.GONE
+            }
+            widthAndHeightLayouts.forEach {
+                it.visibility = View.GONE
+            }
         }
 
-        if (imageButton.id == R.id.imageButton_pixelate || imageButton.id == R.id.imageButton_crop || imageButton.id == R.id.imageButton_resize) {
+        if (imageButton != null && (imageButton.id == R.id.imageButton_crop || imageButton.id == R.id.imageButton_resize)) {
             binding.apply {
                 buttonProcess.visibility = View.VISIBLE
                 viewSeparatorLineVertical.visibility = View.VISIBLE
@@ -784,13 +568,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun hideGrayAndRgbTextView() {
-        binding.apply {
-            textViewGrayScale.visibility = View.GONE
-            textViewRgb.visibility = View.GONE
-        }
-    }
-
     private fun showProgressBar(isShown: Boolean) {
         binding.apply {
             progresBar.visibility = if (isShown) View.VISIBLE else View.GONE
@@ -798,22 +575,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 buttonProcess,
                 cameraButton,
                 galleryButton,
-                textViewRgb,
                 imageButtonReflectYAxis,
                 imageButtonReflectXAxis,
                 imageButtonResize,
                 imageButtonCrop,
-                imageButtonPixelate,
-                buttonRgbToHsv,
-                buttonRgbToHsi,
-                buttonMinFilter,
-                buttonMaxFilter,
-                buttonMedianFilter,
-                buttonAverageFilter,
-                buttonLaplacianFilter,
-                buttonSobelGradient,
-                buttonSpecialOperation,
-                buttonGammaTransformation
             )
             clickableViews.forEach { it.isEnabled = !isShown }
         }

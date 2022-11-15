@@ -1,34 +1,20 @@
 <resources>
-    <string name="app_name">ImageProcessingPractice</string>
+    <string name="app_name">IntelligentEye</string>
     <string name="image">Image</string>
     <string name="width">Width</string>
     <string name="height">Height</string>
-    <string name="gray">GRAY</string>
-    <string name="rgb"><font color='red'>R</font><font color='green'>G</font><font color='blue'>B</font></string>
     <string name="reflect_on_y_axis">Reflect on Y Axis.</string>
     <string name="reflect_on_x_axis">Reflect on X Axis.</string>
     <string name="pick_image_from_gallery">Pick image from gallery.</string>
     <string name="take_a_photo_from_camera">Take a photo from camera.</string>
     <string name="resize_image">Resize image.</string>
     <string name="crop_image">Crop image.</string>
-    <string name="pixelate_image">Pixelate image.</string>
     <string name="resize">RESIZE</string>
     <string name="crop">CROP</string>
-    <string name="pixelate">PIXELATE</string>
     <string name="fromx">fromX</string>
     <string name="fromy">fromY</string>
     <string name="tox">toX</string>
     <string name="toy">toY</string>
     <string name="undo">Undo</string>
-    <string name="rgb_to_hsi">RGB -> HSI</string>
-    <string name="rgb_to_hsv">RGB -> HSV</string>
-    <string name="min_filter">MIN FILTER</string>
-    <string name="max_filter">MAX FILTER</string>
-    <string name="median_filter">MEDIAN FILTER</string>
-    <string name="average_filter">AVERAGE FILTER</string>
-    <string name="laplacian_filter">LAPLACIAN FILTER</string>
-    <string name="sobel_gradient">SOBEL GRADIENT</string>
-    <string name="special_operation">SPECIAL OPERATION</string>
-    <string name="gamma_transformation">GAMMA TRANSFORMATION</string>
-    <string name="lung_segmentation">LUNG SEGMENTATION</string>
+    <string name="process">PROCESS</string>
 </resources>

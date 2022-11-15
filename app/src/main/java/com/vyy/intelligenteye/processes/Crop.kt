@@ -1,10 +1,10 @@
-package com.vyy.imageprocessingpractice.processes
+package com.vyy.intelligenteye.processes
 
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import androidx.core.graphics.drawable.toDrawable
-import com.vyy.imageprocessingpractice.utils.lastProcessTime
+import com.vyy.intelligenteye.utils.lastProcessTime
 
 // Crop bitmap image and return as BitmapDrawable
 fun crop(

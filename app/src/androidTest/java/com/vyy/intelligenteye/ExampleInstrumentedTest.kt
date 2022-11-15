@@ -1,4 +1,4 @@
-package com.vyy.imageprocessingpractice
+package com.vyy.intelligenteye
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

@@ -1,4 +1,4 @@
-package com.vyy.imageprocessingpractice
+package com.vyy.intelligenteye
 
 import org.junit.Test
 

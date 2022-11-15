@@ -1,4 +1,4 @@
-package com.vyy.imageprocessingpractice.processes
+package com.vyy.intelligenteye.processes
 
 import android.content.res.Resources
 import android.graphics.Bitmap
@@ -6,7 +6,7 @@ import android.graphics.Matrix
 import android.graphics.drawable.BitmapDrawable
 import android.util.DisplayMetrics
 import androidx.core.graphics.drawable.toDrawable
-import com.vyy.imageprocessingpractice.utils.lastProcessTime
+import com.vyy.intelligenteye.utils.lastProcessTime
 
 fun reflectOnXAxis(bitmap: Bitmap, resources: Resources) =
     scale(bitmap, 1f, -1f, resources)

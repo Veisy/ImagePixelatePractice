@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.vyy.imagemosaicing'
+    namespace 'com.vyy.intelligenteye'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.vyy.imagepixelate"
+        applicationId "com.vyy.intelligenteye"
         minSdk 21
         targetSdk 33
         versionCode 1

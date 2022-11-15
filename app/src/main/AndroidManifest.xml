@@ -10,7 +10,7 @@
     <uses-feature android:name="android.hardware.camera" />
 
     <application
-        android:name="com.vyy.imageprocessingpractice.ImageProcessingPracticeApplication"
+        android:name="com.vyy.intelligenteye.IntelligentEyeApplication"
         android:allowBackup="true"
         android:configChanges="orientation|keyboardHidden"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -21,10 +21,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:screenOrientation="portrait"
         android:supportsRtl="true"
-        android:theme="@style/Theme.ImagePixelatePractice"
+        android:theme="@style/Theme.IntelligentEye"
         tools:targetApi="33">
         <activity
-            android:name="com.vyy.imageprocessingpractice.MainActivity"
+            android:name="com.vyy.intelligenteye.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

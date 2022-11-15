@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/layout_background"
-    tools:context="com.vyy.imageprocessingpractice.MainActivity">
+    tools:context="com.vyy.intelligenteye.MainActivity">
 
     <FrameLayout
         android:id="@+id/frame"
@@ -44,242 +44,64 @@
         app:layout_constraintTop_toTopOf="@id/frame"
         tools:visibility="visible" />
 
-    <TextView
-        android:id="@+id/textView_grayScale"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/margin_xx_large"
-        android:layout_marginBottom="@dimen/margin_xxx_large"
-        android:alpha="0.6"
-        android:text="@string/gray"
-        android:textStyle="bold"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/guideline3"
-        app:layout_constraintStart_toStartOf="@id/frame"
-        tools:visibility="visible" />
-
-    <TextView
-        android:id="@+id/textView_rgb"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/margin_xx_large"
-        android:layout_marginBottom="@dimen/margin_xxx_large"
-        android:alpha="0.6"
-        android:text="@string/rgb"
-        android:textStyle="bold"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/guideline3"
-        app:layout_constraintEnd_toEndOf="@id/frame"
-        tools:visibility="visible" />
-
-    <HorizontalScrollView
-        android:id="@+id/horizontalScrollView_processes"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout_processes"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_small"
-        android:scrollbars="none"
         app:layout_constraintEnd_toEndOf="@id/frame"
         app:layout_constraintStart_toStartOf="@id/frame"
         app:layout_constraintTop_toBottomOf="@id/guideline3">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+        <ImageButton
+            android:id="@+id/imageButton_reflect_y_axis"
+            style="@style/normalButtonStyle"
+            android:background="@color/transparent"
+            android:contentDescription="@string/reflect_on_y_axis"
+            android:padding="@dimen/padding_medium"
+            android:src="@drawable/ic_flip"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/imageButton_reflect_x_axis"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageButton
-                android:id="@+id/imageButton_reflect_y_axis"
-                style="@style/normalButtonStyle"
-                android:background="@color/transparent"
-                android:contentDescription="@string/reflect_on_y_axis"
-                android:padding="@dimen/padding_medium"
-                android:src="@drawable/ic_flip"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+        <ImageButton
+            android:id="@+id/imageButton_reflect_x_axis"
+            style="@style/normalButtonStyle"
+            android:background="@color/transparent"
+            android:contentDescription="@string/reflect_on_x_axis"
+            android:padding="@dimen/padding_medium"
+            android:rotation="270"
+            android:src="@drawable/ic_flip"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/imageButton_resize"
+            app:layout_constraintStart_toEndOf="@id/imageButton_reflect_y_axis"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageButton
-                android:id="@+id/imageButton_reflect_x_axis"
-                style="@style/normalButtonStyle"
-                android:background="@color/transparent"
-                android:contentDescription="@string/reflect_on_x_axis"
-                android:padding="@dimen/padding_medium"
-                android:rotation="270"
-                android:src="@drawable/ic_flip"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/imageButton_reflect_y_axis"
-                app:layout_constraintTop_toTopOf="parent" />
+        <ImageButton
+            android:id="@+id/imageButton_resize"
+            style="@style/normalButtonStyle"
+            android:background="@drawable/image_button_unselected_background"
+            android:contentDescription="@string/resize_image"
+            android:padding="@dimen/padding_medium"
+            android:src="@drawable/ic_photo_resize_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/imageButton_crop"
+            app:layout_constraintStart_toEndOf="@id/imageButton_reflect_x_axis"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageButton
-                android:id="@+id/imageButton_resize"
-                style="@style/normalButtonStyle"
-                android:background="@drawable/image_button_unselected_background"
-                android:contentDescription="@string/resize_image"
-                android:padding="@dimen/padding_medium"
-                android:src="@drawable/ic_photo_resize_24"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/imageButton_reflect_x_axis"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <ImageButton
-                android:id="@+id/imageButton_crop"
-                style="@style/normalButtonStyle"
-                android:background="@drawable/image_button_unselected_background"
-                android:contentDescription="@string/crop_image"
-                android:padding="@dimen/padding_medium"
-                android:src="@drawable/ic_crop_24"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/imageButton_resize"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <ImageButton
-                android:id="@+id/imageButton_pixelate"
-                style="@style/normalButtonStyle"
-                android:background="@drawable/image_button_unselected_background"
-                android:contentDescription="@string/pixelate_image"
-                android:padding="@dimen/padding_medium"
-                android:src="@drawable/ic_pixelate_24"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/imageButton_crop"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <Button
-                android:id="@+id/button_rgbToHsi"
-                style="@style/normalButtonStyle"
-                android:text="@string/rgb_to_hsi"
-                android:textColor="@color/colorPrimaryVariant"
-                android:textSize="@dimen/textSize_small"
-                app:backgroundTint="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/imageButton_pixelate"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <Button
-                android:id="@+id/button_rgbToHsv"
-                style="@style/normalButtonStyle"
-                android:text="@string/rgb_to_hsv"
-                android:textColor="@color/colorPrimaryVariant"
-                android:textSize="@dimen/textSize_small"
-                app:backgroundTint="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/button_rgbToHsi"
-                app:layout_constraintTop_toTopOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </HorizontalScrollView>
-
-    <HorizontalScrollView
-        android:id="@+id/horizontalScrollView_filters"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_small"
-        android:scrollbars="none"
-        app:layout_constraintEnd_toEndOf="@id/frame"
-        app:layout_constraintStart_toStartOf="@id/frame"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal2">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-            <Button
-                android:id="@+id/button_lungSegmentation"
-                style="@style/normalButtonStyle"
-                android:text="@string/lung_segmentation"
-                android:textColor="@color/colorPrimaryVariant"
-                android:textSize="@dimen/textSize_small"
-                app:backgroundTint="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <Button
-                android:id="@+id/button_minFilter"
-                style="@style/normalButtonStyle"
-                android:text="@string/min_filter"
-                android:textColor="@color/colorPrimaryVariant"
-                android:textSize="@dimen/textSize_small"
-                app:backgroundTint="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/button_lungSegmentation"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <Button
-                android:id="@+id/button_maxFilter"
-                style="@style/normalButtonStyle"
-                android:text="@string/max_filter"
-                android:textColor="@color/colorPrimaryVariant"
-                android:textSize="@dimen/textSize_small"
-                app:backgroundTint="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/button_minFilter"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <Button
-                android:id="@+id/button_medianFilter"
-                style="@style/normalButtonStyle"
-                android:text="@string/median_filter"
-                android:textColor="@color/colorPrimaryVariant"
-                android:textSize="@dimen/textSize_small"
-                app:backgroundTint="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/button_maxFilter"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <Button
-                android:id="@+id/button_averageFilter"
-                style="@style/normalButtonStyle"
-                android:text="@string/average_filter"
-                android:textColor="@color/colorPrimaryVariant"
-                android:textSize="@dimen/textSize_small"
-                app:backgroundTint="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/button_medianFilter"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <Button
-                android:id="@+id/button_laplacianFilter"
-                style="@style/normalButtonStyle"
-                android:text="@string/laplacian_filter"
-                android:textColor="@color/colorPrimaryVariant"
-                android:textSize="@dimen/textSize_small"
-                app:backgroundTint="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/button_averageFilter"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <Button
-                android:id="@+id/button_sobelGradient"
-                style="@style/normalButtonStyle"
-                android:text="@string/sobel_gradient"
-                android:textColor="@color/colorPrimaryVariant"
-                android:textSize="@dimen/textSize_small"
-                app:backgroundTint="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/button_laplacianFilter"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <Button
-                android:id="@+id/button_gammaTransformation"
-                style="@style/normalButtonStyle"
-                android:text="@string/gamma_transformation"
-                android:textColor="@color/colorPrimaryVariant"
-                android:textSize="@dimen/textSize_small"
-                app:backgroundTint="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/button_sobelGradient"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <Button
-                android:id="@+id/button_specialOperation"
-                style="@style/normalButtonStyle"
-                android:text="@string/special_operation"
-                android:textColor="@color/colorPrimaryVariant"
-                android:textSize="@dimen/textSize_small"
-                app:backgroundTint="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/button_gammaTransformation"
-                app:layout_constraintTop_toTopOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </HorizontalScrollView>
+        <ImageButton
+            android:id="@+id/imageButton_crop"
+            style="@style/normalButtonStyle"
+            android:background="@drawable/image_button_unselected_background"
+            android:contentDescription="@string/crop_image"
+            android:padding="@dimen/padding_medium"
+            android:src="@drawable/ic_crop_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/imageButton_resize"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <View
         android:id="@+id/view_separatorLine_vertical"
@@ -290,7 +112,7 @@
         app:layout_constraintBottom_toTopOf="@id/button_process"
         app:layout_constraintEnd_toEndOf="@id/guideline4"
         app:layout_constraintStart_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal3"
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal2"
         tools:visibility="visible" />
 
     <View
@@ -314,18 +136,8 @@
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="@id/frame"
         app:layout_constraintStart_toStartOf="@id/frame"
-        app:layout_constraintTop_toBottomOf="@id/horizontalScrollView_processes" />
+        app:layout_constraintTop_toBottomOf="@id/constraintLayout_processes" />
 
-    <View
-        android:id="@+id/view_separatorLine_horizontal3"
-        android:layout_width="0dp"
-        android:layout_height="2dp"
-        android:layout_marginTop="@dimen/margin_small"
-        android:background="@color/gray_level_6"
-        android:visibility="visible"
-        app:layout_constraintEnd_toEndOf="@id/frame"
-        app:layout_constraintStart_toStartOf="@id/frame"
-        app:layout_constraintTop_toBottomOf="@id/horizontalScrollView_filters" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline3"
@@ -359,12 +171,12 @@
         android:id="@+id/galleryButton_frame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/margin_large"
         android:background="@drawable/button_gallery_background"
         android:contentDescription="@string/take_a_photo_from_camera"
         android:padding="@dimen/padding_medium"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/button_process">
+        app:layout_constraintEnd_toStartOf="@id/guideline4">
 
         <Button
             android:id="@+id/galleryButton"
@@ -378,12 +190,12 @@
         android:id="@+id/cameraButton_frame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/margin_large"
         android:background="@drawable/button_camera_background"
         android:contentDescription="@string/pick_image_from_gallery"
         android:padding="@dimen/padding_medium"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/button_process">
+        app:layout_constraintStart_toEndOf="@id/guideline4">
 
         <Button
             android:id="@+id/cameraButton"
@@ -399,7 +211,7 @@
         android:hint="@string/width"
         android:visibility="gone"
         app:layout_constraintEnd_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal3"
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal2"
         tools:visibility="visible">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -414,7 +226,7 @@
         android:hint="@string/height"
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal3"
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal2"
         tools:visibility="visible">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -429,7 +241,7 @@
         android:hint="@string/fromx"
         android:visibility="gone"
         app:layout_constraintEnd_toStartOf="@id/textInputLayout_fromY"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal3">
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal2">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_fromX"
@@ -443,7 +255,7 @@
         android:hint="@string/fromy"
         android:visibility="gone"
         app:layout_constraintEnd_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal3">
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal2">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_fromY"
@@ -457,7 +269,7 @@
         android:hint="@string/tox"
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal3">
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal2">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_toX"
@@ -471,7 +283,7 @@
         android:hint="@string/toy"
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@id/textInputLayout_toX"
-        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal3">
+        app:layout_constraintTop_toBottomOf="@id/view_separatorLine_horizontal2">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textInputEditText_toY"
@@ -492,7 +304,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_medium"
         android:backgroundTint="@color/white"
-        android:text="@string/pixelate"
+        android:text="@string/process"
         android:textColor="@color/colorPrimary"
         android:textSize="@dimen/textSize_small"
         android:textStyle="bold"
