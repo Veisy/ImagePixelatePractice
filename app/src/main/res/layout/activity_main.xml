@@ -359,12 +359,12 @@
         android:id="@+id/galleryButton_frame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/margin_large"
         android:background="@drawable/button_gallery_background"
         android:contentDescription="@string/take_a_photo_from_camera"
         android:padding="@dimen/padding_medium"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/button_process">
+        app:layout_constraintEnd_toStartOf="@id/guideline4">
 
         <Button
             android:id="@+id/galleryButton"
@@ -378,12 +378,12 @@
         android:id="@+id/cameraButton_frame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/margin_large"
         android:background="@drawable/button_camera_background"
         android:contentDescription="@string/pick_image_from_gallery"
         android:padding="@dimen/padding_medium"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/guideline4"
-        app:layout_constraintTop_toBottomOf="@id/button_process">
+        app:layout_constraintStart_toEndOf="@id/guideline4">
 
         <Button
             android:id="@+id/cameraButton"
@@ -490,13 +490,13 @@
         android:id="@+id/button_process"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_medium"
         android:backgroundTint="@color/white"
         android:text="@string/pixelate"
         android:textColor="@color/colorPrimary"
         android:textSize="@dimen/textSize_small"
         android:textStyle="bold"
         android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/galleryButton_frame"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/barrier_inputs"

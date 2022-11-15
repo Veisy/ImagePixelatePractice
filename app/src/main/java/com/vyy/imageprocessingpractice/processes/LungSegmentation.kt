@@ -48,6 +48,11 @@ private fun applyFilter(
     // We use this variable to check if enough time has passed for a new operation.
     lastProcessTime = System.currentTimeMillis()
 
+    topmostPixelIndex = 0
+    leftmostPixelIndex = 0
+    rightmostPixelIndex = 0
+    bottommostPixelIndex = 0
+
     val width = bitmap.width
     val height = bitmap.height
     val pixels = IntArray(width * height)
