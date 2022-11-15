@@ -14,7 +14,6 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
-import android.widget.ImageButton
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,7 +30,10 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.vyy.intelligenteye.databinding.ActivityMainBinding
-import com.vyy.intelligenteye.processes.*
+import com.vyy.intelligenteye.processes.crop
+import com.vyy.intelligenteye.processes.reflectOnXAxis
+import com.vyy.intelligenteye.processes.reflectOnYAxis
+import com.vyy.intelligenteye.processes.resize
 import com.vyy.intelligenteye.utils.Constants.FILENAME_FORMAT
 import com.vyy.intelligenteye.utils.Constants.IMAGE_STACK_SIZE_MAX
 import com.vyy.intelligenteye.utils.Constants.IMAGE_STACK_SIZE_MIN
@@ -127,6 +129,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             when (v.id) {
                 R.id.imageButton_undo, R.id.cameraButton, R.id.galleryButton -> {
                     cancelCurrentJobs()
+                    updateSelectedProcess(null)
                     when (v.id) {
                         R.id.imageButton_undo -> removeFromImageStack()
                         R.id.cameraButton -> takePhoto()
@@ -138,7 +141,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     cancelCurrentJobs(
                         isImageUriToBitmapCanceled = false
                     )
-
+                    updateSelectedProcess(v.id)
                     imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                         reflectBitmap(isReflectOnXAxis = v.id == R.id.imageButton_reflect_x_axis)
                     }
@@ -149,12 +152,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         isImageUriToBitmapCanceled = false
                     )
 
-                    updateSelectedProcess(
-                        when (v.id) {
-                            R.id.imageButton_resize -> binding.imageButtonResize
-                            else -> binding.imageButtonCrop
-                        }
-                    )
+                    updateSelectedProcess(v.id)
                 }
 
                 R.id.button_process -> {
@@ -306,8 +304,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         ).build()
 
 
-        imageCapture.takePicture(
-            outputOptions,
+        imageCapture.takePicture(outputOptions,
             cameraExecutor,
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
@@ -349,14 +346,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         try {
             showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
-
-            updateSelectedProcess(
-                if (isReflectOnXAxis) {
-                    binding.imageButtonReflectXAxis
-                } else {
-                    binding.imageButtonReflectYAxis
-                }
-            )
 
             if (checkEnoughTimePassed() && imageBitmap != null) {
                 // Since this operation takes time, we use Dispatchers.Default,
@@ -501,18 +490,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun updateSelectedProcess(imageButton: ImageButton?) {
+    private fun updateSelectedProcess(imageButtonId: Int?) {
         clearInputTextFields()
 
         val allImageButtons = listOf(
             binding.imageButtonResize, binding.imageButtonCrop
         )
 
-        selectedProcess = imageButton?.id
+        selectedProcess = imageButtonId
 
-        if (imageButton != null) {
+        if (imageButtonId != null) {
             binding.buttonProcess.apply {
-                text = when (imageButton.id) {
+                text = when (imageButtonId) {
                     R.id.imageButton_resize -> getString(R.string.resize)
                     R.id.imageButton_crop -> getString(R.string.crop)
                     else -> text.toString()
@@ -521,7 +510,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         allImageButtons.forEach { button ->
-            button.background = if (button == imageButton) {
+            button.background = if (button.id == imageButtonId) {
                 ContextCompat.getDrawable(this, R.drawable.image_button_selected_background)
             } else {
                 ContextCompat.getDrawable(this, R.drawable.image_button_unselected_background)
@@ -538,11 +527,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             binding.textInputLayoutWidth, binding.textInputLayoutHeight
         )
 
-        if (imageButton != null && imageButton.id == R.id.imageButton_crop) {
+        if (imageButtonId != null && imageButtonId == R.id.imageButton_crop) {
             cropInputLayouts.forEach {
                 it.visibility = View.VISIBLE
             }
-        } else if (imageButton != null && imageButton.id == R.id.imageButton_resize) {
+        } else if (imageButtonId != null && imageButtonId == R.id.imageButton_resize) {
             widthAndHeightLayouts.forEach {
                 it.visibility = View.VISIBLE
             }
@@ -555,7 +544,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
         }
 
-        if (imageButton != null && (imageButton.id == R.id.imageButton_crop || imageButton.id == R.id.imageButton_resize)) {
+        if (imageButtonId != null && (imageButtonId == R.id.imageButton_crop || imageButtonId == R.id.imageButton_resize)) {
             binding.apply {
                 buttonProcess.visibility = View.VISIBLE
                 viewSeparatorLineVertical.visibility = View.VISIBLE
