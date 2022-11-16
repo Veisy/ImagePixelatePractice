@@ -34,12 +34,16 @@ import com.vyy.intelligenteye.processes.crop
 import com.vyy.intelligenteye.processes.reflectOnXAxis
 import com.vyy.intelligenteye.processes.reflectOnYAxis
 import com.vyy.intelligenteye.processes.resize
+import com.vyy.intelligenteye.utils.Constants.CATARACT
 import com.vyy.intelligenteye.utils.Constants.FILENAME_FORMAT
+import com.vyy.intelligenteye.utils.Constants.GLAUCOMA
 import com.vyy.intelligenteye.utils.Constants.IMAGE_STACK_SIZE_MAX
 import com.vyy.intelligenteye.utils.Constants.IMAGE_STACK_SIZE_MIN
 import com.vyy.intelligenteye.utils.Constants.MAX_HEIGHT
 import com.vyy.intelligenteye.utils.Constants.MAX_WIDTH
+import com.vyy.intelligenteye.utils.Constants.NO_DISEASE
 import com.vyy.intelligenteye.utils.Constants.REQUEST_CODE_PERMISSIONS
+import com.vyy.intelligenteye.utils.Constants.RETINAL_DISEASES
 import com.vyy.intelligenteye.utils.InputFilterMinMax
 import com.vyy.intelligenteye.utils.checkEnoughTimePassed
 import kotlinx.coroutines.*
@@ -61,6 +65,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var imageStack: ArrayDeque<Bitmap> = ArrayDeque()
 
     private var imageProcessingJob: Job? = null
+    private var imageAnalysisJob: Job? = null
     private var imageUriToBitmapDeferred: Deferred<Bitmap?>? = null
 
     private var selectedProcess: Int? = null
@@ -85,9 +90,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         // Default Image
         if (imageStack.size < 1) {
             imageUri = Uri.Builder().scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
-                .authority(resources.getResourcePackageName(R.drawable.lenna))
-                .appendPath(resources.getResourceTypeName(R.drawable.lenna))
-                .appendPath(resources.getResourceEntryName(R.drawable.lenna)).build()
+                .authority(resources.getResourcePackageName(R.drawable.default_image))
+                .appendPath(resources.getResourceTypeName(R.drawable.default_image))
+                .appendPath(resources.getResourceEntryName(R.drawable.default_image)).build()
             updateImageView(imageUri)
 
             imageUriToBitmapDeferred = this.lifecycleScope.async(Dispatchers.Default) {
@@ -97,6 +102,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
                 bitmap
             }
+            updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
         }
     }
 
@@ -121,6 +127,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             imageButtonResize.setOnClickListener(this@MainActivity)
             imageButtonCrop.setOnClickListener(this@MainActivity)
             imageButtonUndo.setOnClickListener(this@MainActivity)
+            buttonAnalyze.setOnClickListener(this@MainActivity)
         }
     }
 
@@ -130,6 +137,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 R.id.imageButton_undo, R.id.cameraButton, R.id.galleryButton -> {
                     cancelCurrentJobs()
                     updateSelectedProcess(null)
+                    updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
+
                     when (v.id) {
                         R.id.imageButton_undo -> removeFromImageStack()
                         R.id.cameraButton -> takePhoto()
@@ -141,6 +150,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     cancelCurrentJobs(
                         isImageUriToBitmapCanceled = false
                     )
+                    updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
                     updateSelectedProcess(v.id)
                     imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                         reflectBitmap(isReflectOnXAxis = v.id == R.id.imageButton_reflect_x_axis)
@@ -148,10 +158,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
 
                 R.id.imageButton_resize, R.id.imageButton_crop -> {
-                    cancelCurrentJobs(
-                        isImageUriToBitmapCanceled = false
-                    )
-
                     updateSelectedProcess(v.id)
                 }
 
@@ -165,6 +171,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         val height = binding.textInputEditTextHeight.text.toString()
 
                         if (checkIfInputsValid(listOf(width, height))) {
+                            updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
                             imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                                 resizeBitmap(
                                     width.toDouble(), height.toDouble()
@@ -177,7 +184,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         val toX = binding.textInputEditTextToX.text.toString()
                         val toY = binding.textInputEditTextToY.text.toString()
                         if (checkIfInputsValid(listOf(fromX, fromY, toX, toY))) {
-
+                            updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
                             imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                                 cropBitmap(
                                     fromX.toDouble(),
@@ -187,6 +194,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 )
                             }
                         }
+                    }
+                }
+
+                R.id.button_analyze -> {
+                    cancelCurrentJobs(
+                        isImageUriToBitmapCanceled = false
+                    )
+                    updateSelectedProcess(null)
+                    imageAnalysisJob = this.lifecycleScope.launch(Dispatchers.Main) {
+                        analyzeForEyeDisease()
                     }
                 }
 
@@ -304,7 +321,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         ).build()
 
 
-        imageCapture.takePicture(outputOptions,
+        imageCapture.takePicture(
+            outputOptions,
             cameraExecutor,
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
@@ -445,6 +463,25 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private suspend fun analyzeForEyeDisease() {
+        try {
+            showProgressBar(true)
+            imageBitmap = imageUriToBitmapDeferred?.await()
+            if (checkEnoughTimePassed() && imageBitmap != null) {
+                // Since this operation takes time, we use Dispatchers.Default,
+                // which is optimized for time consuming calculations.
+
+                delay(2000)
+                val eyeDiseasesList = listOf(RETINAL_DISEASES, CATARACT, GLAUCOMA, NO_DISEASE)
+                updateEyeDiseaseViews(eyeDiseaseType = eyeDiseasesList.random())
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Eye disease analysis is failed: ${e.message}", e)
+        } finally {
+            showProgressBar(false)
+        }
+    }
+
     private fun checkIfInputsValid(inputs: List<String>) = inputs.all { input ->
         input.isNotEmpty() && input.toDouble() > 0
     }
@@ -568,8 +605,60 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 imageButtonReflectXAxis,
                 imageButtonResize,
                 imageButtonCrop,
+                buttonAnalyze
             )
             clickableViews.forEach { it.isEnabled = !isShown }
+        }
+    }
+
+    private fun updateEyeDiseaseViews(isViewsVisible: Boolean = true, eyeDiseaseType: String = "") {
+        if (eyeDiseaseType.isNotEmpty() && isViewsVisible) {
+            binding.apply {
+                textViewAnalyzeResult.visibility = View.VISIBLE
+                viewEyeDiseaseIndicator.visibility = View.VISIBLE
+                viewEyeDiseaseIndicator.background = when (eyeDiseaseType) {
+                    NO_DISEASE -> ContextCompat.getDrawable(
+                        this@MainActivity, R.drawable.circular_green_indicator
+                    )
+                    else -> ContextCompat.getDrawable(
+                        this@MainActivity, R.drawable.circular_red_indicator
+                    )
+                }
+                textViewAnalyzeResult.text = when (eyeDiseaseType) {
+                    RETINAL_DISEASES -> {
+                        getString(R.string.retinal_disease_detected)
+                    }
+                    CATARACT -> {
+                        getString(R.string.cataract_detected)
+                    }
+                    GLAUCOMA -> {
+                        getString(R.string.glaucoma_detected)
+                    }
+                    else -> {
+                        getString(R.string.no_disease_detected)
+                    }
+                }
+                textViewAnalyzeResult.setTextColor(
+                    if (eyeDiseaseType == NO_DISEASE) {
+                        ContextCompat.getColor(this@MainActivity, R.color.green)
+                    } else {
+                        ContextCompat.getColor(this@MainActivity, R.color.red)
+                    }
+                )
+                buttonAnalyze.visibility = View.GONE
+            }
+        } else if (isViewsVisible) {
+            binding.apply {
+                textViewAnalyzeResult.visibility = View.GONE
+                viewEyeDiseaseIndicator.visibility = View.GONE
+                buttonAnalyze.visibility = View.VISIBLE
+            }
+        } else {
+            binding.apply {
+                textViewAnalyzeResult.visibility = View.GONE
+                viewEyeDiseaseIndicator.visibility = View.GONE
+                buttonAnalyze.visibility = View.GONE
+            }
         }
     }
 

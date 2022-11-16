@@ -17,4 +17,9 @@
     <string name="toy">toY</string>
     <string name="undo">Undo</string>
     <string name="process">PROCESS</string>
+    <string name="analyze">ANALYZE</string>
+    <string name="retinal_disease_detected">Retinal Disease Detected!</string>
+    <string name="cataract_detected">Cataract Detected!</string>
+    <string name="glaucoma_detected">Glaucoma Detected!</string>
+    <string name="no_disease_detected">No Disease Detected</string>
 </resources>

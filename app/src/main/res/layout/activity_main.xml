@@ -314,4 +314,42 @@
         app:layout_constraintTop_toBottomOf="@id/barrier_inputs"
         tools:visibility="visible" />
 
+    <TextView
+        android:id="@+id/textView_analyzeResult"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/margin_medium"
+        android:textSize="@dimen/textSize_large"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/galleryButton_frame"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/button_process"
+        tools:text="@string/no_disease_detected"
+        tools:textColor="@color/green"
+        tools:visibility="visible" />
+
+    <View
+        android:id="@+id/view_eyeDiseaseIndicator"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:background="@drawable/circular_green_indicator"
+        android:importantForAccessibility="no"
+        app:layout_constraintBottom_toBottomOf="@id/textView_analyzeResult"
+        app:layout_constraintEnd_toStartOf="@id/textView_analyzeResult"
+        app:layout_constraintTop_toTopOf="@id/textView_analyzeResult" />
+
+    <Button
+        android:id="@+id/button_analyze"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/analyze"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/galleryButton_frame"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/button_process"
+        tools:visibility="visible" />
 </androidx.constraintlayout.widget.ConstraintLayout>

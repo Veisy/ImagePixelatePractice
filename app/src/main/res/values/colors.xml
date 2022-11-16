@@ -11,6 +11,8 @@
     <color name="gray_level_5">#C8C8C8</color>
     <color name="gray_level_6">#E1E1E1</color>
     <color name="gray_level_7">#F0F0F0</color>
+    <color name="red">#C83232</color>
+    <color name="green">#32C832</color>
 
     <color name="transparent">#00000000</color>
 </resources>
