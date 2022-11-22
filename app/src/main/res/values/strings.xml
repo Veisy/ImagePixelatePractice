@@ -31,4 +31,6 @@
     <string name="special_operation">SPECIAL OPERATION</string>
     <string name="gamma_transformation">GAMMA TRANSFORMATION</string>
     <string name="lung_segmentation">LUNG SEGMENTATION</string>
+    <string name="low_pass_filter">LOW PASS FILTER</string>
+    <string name="high_pass_filter">HIGH PASS FILTER</string>
 </resources>

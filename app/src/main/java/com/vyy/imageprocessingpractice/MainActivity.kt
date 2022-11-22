@@ -37,9 +37,11 @@ import com.vyy.imageprocessingpractice.utils.Constants.AVERAGE_FILTER
 import com.vyy.imageprocessingpractice.utils.Constants.DEFAULT_SPECIAL_OPERATION
 import com.vyy.imageprocessingpractice.utils.Constants.FILENAME_FORMAT
 import com.vyy.imageprocessingpractice.utils.Constants.GAMMA_TRANSFORMATION
+import com.vyy.imageprocessingpractice.utils.Constants.HIGH_PASS_FILTER
 import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MAX
 import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MIN
 import com.vyy.imageprocessingpractice.utils.Constants.LAPLACIAN_FILTER
+import com.vyy.imageprocessingpractice.utils.Constants.LOW_PASS_FILTER
 import com.vyy.imageprocessingpractice.utils.Constants.LUNG_SEGMENTATION
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_FILTER
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_HEIGHT
@@ -147,6 +149,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             buttonGammaTransformation.setOnClickListener(this@MainActivity)
             buttonSpecialOperation.setOnClickListener(this@MainActivity)
             buttonLungSegmentation.setOnClickListener(this@MainActivity)
+            buttonLowPassFilter.setOnClickListener(this@MainActivity)
+            buttonHighPassFilter.setOnClickListener(this@MainActivity)
         }
     }
 
@@ -219,7 +223,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     }
                 }
 
-                R.id.button_rgbToHsi, R.id.button_rgbToHsv, R.id.textView_rgb, R.id.button_minFilter, R.id.button_maxFilter, R.id.button_medianFilter, R.id.button_averageFilter, R.id.button_laplacianFilter, R.id.button_sobelGradient, R.id.button_gammaTransformation -> {
+                R.id.button_rgbToHsi, R.id.button_rgbToHsv, R.id.textView_rgb,
+                R.id.button_minFilter, R.id.button_maxFilter, R.id.button_medianFilter, R.id.button_averageFilter,
+                R.id.button_laplacianFilter, R.id.button_sobelGradient, R.id.button_gammaTransformation,
+                R.id.button_lowPassFilter, R.id.button_highPassFilter -> {
                     cancelCurrentJobs(isImageUriToBitmapCanceled = false)
                     updateSelectedProcess(v.id)
                     imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
@@ -235,6 +242,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 R.id.button_laplacianFilter -> LAPLACIAN_FILTER
                                 R.id.button_sobelGradient -> SOBEL_GRADIENT
                                 R.id.button_gammaTransformation -> GAMMA_TRANSFORMATION
+                                R.id.button_lowPassFilter -> LOW_PASS_FILTER
+                                R.id.button_highPassFilter -> HIGH_PASS_FILTER
                                 else -> RGB_TO_GRAY
                             }
                         )
@@ -372,7 +381,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         ).build()
 
 
-        imageCapture.takePicture(outputOptions,
+        imageCapture.takePicture(
+            outputOptions,
             cameraExecutor,
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {

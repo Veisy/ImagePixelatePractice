@@ -39,10 +39,10 @@ fun lungOperations(originalBitmap: Bitmap, resources: Resources): List<BitmapDra
 }
 
 private fun highlightCorners(bitmap: Bitmap, resources: Resources): BitmapDrawable =
-    applyFilter(bitmap, resources, ::getHighlightedOrBlackPixel)
+    applySpecialFilter(bitmap, resources, ::getHighlightedOrBlackPixel)
 
 // Take filter function as parameter and apply it to each pixel.
-private fun applyFilter(
+private fun applySpecialFilter(
     bitmap: Bitmap, resources: Resources, filterFunction: (IntArray, Int, Int, Int) -> Int
 ): BitmapDrawable {
     // We use this variable to check if enough time has passed for a new operation.
