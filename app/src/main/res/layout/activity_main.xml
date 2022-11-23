@@ -143,6 +143,17 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <Button
+                android:id="@+id/button_equalize"
+                style="@style/normalButtonStyle"
+                android:text="EQUALIZE"
+                android:textColor="@color/colorPrimaryVariant"
+                android:textSize="@dimen/textSize_small"
+                app:backgroundTint="@color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/imageButton_pixelate"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
                 android:id="@+id/button_rgbToHsi"
                 style="@style/normalButtonStyle"
                 android:text="@string/rgb_to_hsi"
@@ -150,7 +161,7 @@
                 android:textSize="@dimen/textSize_small"
                 app:backgroundTint="@color/white"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/imageButton_pixelate"
+                app:layout_constraintStart_toEndOf="@id/button_equalize"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <Button
