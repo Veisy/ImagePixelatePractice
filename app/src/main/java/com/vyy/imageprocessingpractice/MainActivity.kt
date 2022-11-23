@@ -381,8 +381,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         ).build()
 
 
-        imageCapture.takePicture(
-            outputOptions,
+        imageCapture.takePicture(outputOptions,
             cameraExecutor,
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
@@ -778,7 +777,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
         widthAndHeightLayouts.forEach {
             it.visibility =
-                if (imageButtonId != null && imageButtonId == R.id.imageButton_resize) View.VISIBLE else View.GONE
+                if (imageButtonId != null && (imageButtonId == R.id.imageButton_resize || imageButtonId == R.id.imageButton_pixelate)) View.VISIBLE else View.GONE
         }
 
         if (imageButtonId != null && (imageButtonId == R.id.imageButton_pixelate || imageButtonId == R.id.imageButton_crop || imageButtonId == R.id.imageButton_resize)) {
