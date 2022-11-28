@@ -53,6 +53,7 @@ import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_GRAY
 import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_HSI
 import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_HSV
 import com.vyy.imageprocessingpractice.utils.Constants.SOBEL_GRADIENT
+import com.vyy.imageprocessingpractice.utils.Constants.WIENER_FILTER
 import com.vyy.imageprocessingpractice.utils.InputFilterMinMax
 import com.vyy.imageprocessingpractice.utils.checkEnoughTimePassed
 import kotlinx.coroutines.*
@@ -151,6 +152,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             buttonLungSegmentation.setOnClickListener(this@MainActivity)
             buttonLowPassFilter.setOnClickListener(this@MainActivity)
             buttonHighPassFilter.setOnClickListener(this@MainActivity)
+            buttonWienerFilter.setOnClickListener(this@MainActivity)
         }
     }
 
@@ -226,7 +228,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 R.id.button_rgbToHsi, R.id.button_rgbToHsv, R.id.textView_rgb,
                 R.id.button_minFilter, R.id.button_maxFilter, R.id.button_medianFilter, R.id.button_averageFilter,
                 R.id.button_laplacianFilter, R.id.button_sobelGradient, R.id.button_gammaTransformation,
-                R.id.button_lowPassFilter, R.id.button_highPassFilter -> {
+                R.id.button_lowPassFilter, R.id.button_highPassFilter,
+                R.id.button_wienerFilter -> {
                     cancelCurrentJobs(isImageUriToBitmapCanceled = false)
                     updateSelectedProcess(v.id)
                     imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
@@ -244,6 +247,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 R.id.button_gammaTransformation -> GAMMA_TRANSFORMATION
                                 R.id.button_lowPassFilter -> LOW_PASS_FILTER
                                 R.id.button_highPassFilter -> HIGH_PASS_FILTER
+                                R.id.button_wienerFilter -> WIENER_FILTER
                                 else -> RGB_TO_GRAY
                             }
                         )
@@ -598,6 +602,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         )
                         RGB_TO_HSV -> rgbToHsv(
                             bitmap = imageBitmap!!, resources = resources
+                        )
+                        WIENER_FILTER -> applyWienerFilter(
+                            bitmap = imageBitmap!!, resources = resources, k = 0.001
                         )
                         else -> {
                             val grayBitmap = rgbToGray(

@@ -203,6 +203,17 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <Button
+                android:id="@+id/button_wienerFilter"
+                style="@style/normalButtonStyle"
+                android:text="@string/wiener_filter"
+                android:textColor="@color/colorPrimaryVariant"
+                android:textSize="@dimen/textSize_small"
+                app:backgroundTint="@color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/button_lungSegmentation"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
                 android:id="@+id/button_lowPassFilter"
                 style="@style/normalButtonStyle"
                 android:text="@string/low_pass_filter"
@@ -210,7 +221,7 @@
                 android:textSize="@dimen/textSize_small"
                 app:backgroundTint="@color/white"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/button_lungSegmentation"
+                app:layout_constraintStart_toEndOf="@id/button_wienerFilter"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <Button

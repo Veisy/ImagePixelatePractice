@@ -33,4 +33,6 @@
     <string name="lung_segmentation">LUNG SEGMENTATION</string>
     <string name="low_pass_filter">LOW PASS FILTER</string>
     <string name="high_pass_filter">HIGH PASS FILTER</string>
+    <string name="restore">RESTORE</string>
+    <string name="wiener_filter">WIENER FILTER</string>
 </resources>

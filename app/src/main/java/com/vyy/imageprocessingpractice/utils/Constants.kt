@@ -22,6 +22,7 @@ object Constants {
     const val LUNG_SEGMENTATION = "LUNG_SEGMENTATION"
     const val LOW_PASS_FILTER = "LOW_PASS_FILTER"
     const val HIGH_PASS_FILTER = "HIGH_PASS_FILTER"
+    const val WIENER_FILTER = "WIENER_FILTER"
 
     const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
     const val REQUEST_CODE_PERMISSIONS = 10
