@@ -30,6 +30,7 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
+import com.vyy.intelligenteye.utils.adjustPercentageColor
 import com.vyy.intelligenteye.databinding.ActivityMainBinding
 import com.vyy.intelligenteye.processes.crop
 import com.vyy.intelligenteye.processes.reflectOnXAxis
@@ -59,7 +60,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var cameraExecutor: ExecutorService
-    private var imageClassifierHelper: ImageClassifierHelper? = null
 
     private var imageCapture: ImageCapture? = null
     private var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>? = null
@@ -70,6 +70,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var imageProcessingJob: Job? = null
     private var imageAnalysisJob: Job? = null
     private var imageUriToBitmapDeferred: Deferred<Bitmap?>? = null
+    private var imageClassifierSetupDeferred: Deferred<ImageClassifierHelper>? = null
 
     private var selectedProcess: Int? = null
 
@@ -83,11 +84,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         setEditTextFilters()
 
         cameraExecutor = Executors.newSingleThreadExecutor()
+        imageClassifierSetupDeferred = this.lifecycleScope.async(Dispatchers.IO) {
+            ImageClassifierHelper(this@MainActivity)
+        }
     }
 
     override fun onStart() {
         super.onStart()
-
         checkPermissions()
 
         // Default Image
@@ -209,10 +212,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun cancelCurrentJobs(
-        isImageProcessingCanceled: Boolean = true, isImageUriToBitmapCanceled: Boolean = true
+        isImageProcessingCanceled: Boolean = true,
+        isImageUriToBitmapCanceled: Boolean = true,
+        isImageAnalysisJobCanceled: Boolean = true
     ) {
         if (isImageProcessingCanceled && imageProcessingJob?.isActive == true) imageProcessingJob?.cancel()
         if (isImageUriToBitmapCanceled && imageUriToBitmapDeferred?.isActive == true) imageUriToBitmapDeferred?.cancel()
+        if (isImageAnalysisJobCanceled && imageAnalysisJob?.isActive == true) imageAnalysisJob?.cancel()
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
@@ -396,7 +402,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             imageBitmap = imageUriToBitmapDeferred?.await()
 
             if (checkEnoughTimePassed() && imageBitmap != null
-                && width <= MAX_WIDTH && height <= MAX_HEIGHT) {
+                && width <= MAX_WIDTH && height <= MAX_HEIGHT
+            ) {
                 // Since this operation takes time, we use Dispatchers.Default,
                 // which is optimized for time consuming calculations.
                 val resizedBitmapDrawable = withContext(Dispatchers.Default) {
@@ -433,7 +440,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             if (checkEnoughTimePassed() && imageBitmap != null
                 && fromXRatio <= 1 && fromYRatio <= 1
                 && toXRatio <= 1 && toYRatio <= 1
-                && fromXRatio < toXRatio && fromYRatio < toYRatio) {
+                && fromXRatio < toXRatio && fromYRatio < toYRatio
+            ) {
                 // Since this operation takes time, we use Dispatchers.Default,
                 // which is optimized for time consuming calculations.
                 val croppedBitmapDrawable = withContext(Dispatchers.Default) {
@@ -466,18 +474,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         try {
             showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
-            if (checkEnoughTimePassed() && imageBitmap != null) {
+            val imageClassifierHelper = imageClassifierSetupDeferred?.await()
+            if (checkEnoughTimePassed() && imageBitmap != null && imageClassifierHelper != null) {
                 // Since this operation takes time, we use Dispatchers.Default,
                 // which is optimized for time consuming calculations.
-
-                if (imageClassifierHelper == null) {
-                    imageClassifierHelper = ImageClassifierHelper(this)
-                }
 
                 var inferenceTime = SystemClock.uptimeMillis()
 
                 val result = withContext(Dispatchers.Default) {
-                    imageClassifierHelper?.classify(imageBitmap!!)
+                    imageClassifierHelper.classify(imageBitmap!!)
                 }
                 Log.d(TAG, result.toString())
 
@@ -488,7 +493,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 if (label != null && score != null) {
                     updateEyeDiseaseViews(true, label, score, inferenceTime)
                 }
-
             }
         } catch (e: Exception) {
             Log.e(TAG, "Eye disease analysis is failed: ${e.message}", e)
@@ -507,6 +511,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             image.let {
                 Glide.with(this).load(it).into(binding.imageView)
             }
+
+            updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
         }
     }
 
@@ -518,23 +524,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         imageStack.addLast(bitmap)
 
-        // Loading ML model after views are shown, thus reducing the loading time of the activity.
-        binding.imageView.post {
-            if (imageClassifierHelper == null) {
-                imageClassifierHelper = ImageClassifierHelper(this)
-            }
-        }
-
         withContext(Dispatchers.Main) {
             binding.imageButtonUndo.visibility =
                 if (imageStack.size > 1) View.VISIBLE else View.GONE
-            updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
         }
     }
 
     private fun removeFromImageStack() {
         updateSelectedProcess(null)
-        updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
 
         if (imageStack.size > IMAGE_STACK_SIZE_MIN) {
             imageStack.removeLast()
@@ -700,6 +697,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 val confidencePercent = (score.toDouble() * 100).roundToInt()
                 val confidenceText = " $confidencePercent%"
                 binding.textViewConfidenceText.text = confidenceText
+                binding.textViewConfidenceText.setTextColor(adjustPercentageColor(confidencePercent))
             }
 
         } else if (isViewsVisible) {
