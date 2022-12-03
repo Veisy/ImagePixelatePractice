@@ -42,8 +42,6 @@ android {
     }
 }
 
-project.ext.ASSET_DIR = projectDir.toString() + '/src/main/assets'
-
 dependencies {
 
     implementation 'androidx.core:core-ktx:1.9.0'

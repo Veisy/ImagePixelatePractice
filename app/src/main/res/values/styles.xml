@@ -24,4 +24,12 @@
         <item name="android:layout_marginStart">@dimen/margin_large</item>
         <item name="android:layout_marginEnd">@dimen/margin_large</item>
     </style>
+
+    <style name="classificationInfoTextStyle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/textSize_medium</item>
+        <item name="android:visibility">gone</item>
+        <item name="android:textColor">@color/colorPrimary</item>
+    </style>
 </resources>

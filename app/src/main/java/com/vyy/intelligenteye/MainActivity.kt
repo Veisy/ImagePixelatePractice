@@ -11,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
@@ -34,30 +35,32 @@ import com.vyy.intelligenteye.processes.crop
 import com.vyy.intelligenteye.processes.reflectOnXAxis
 import com.vyy.intelligenteye.processes.reflectOnYAxis
 import com.vyy.intelligenteye.processes.resize
-import com.vyy.intelligenteye.utils.Constants.CATARACT
 import com.vyy.intelligenteye.utils.Constants.FILENAME_FORMAT
-import com.vyy.intelligenteye.utils.Constants.GLAUCOMA
 import com.vyy.intelligenteye.utils.Constants.IMAGE_STACK_SIZE_MAX
 import com.vyy.intelligenteye.utils.Constants.IMAGE_STACK_SIZE_MIN
 import com.vyy.intelligenteye.utils.Constants.MAX_HEIGHT
 import com.vyy.intelligenteye.utils.Constants.MAX_WIDTH
-import com.vyy.intelligenteye.utils.Constants.NO_DISEASE
 import com.vyy.intelligenteye.utils.Constants.REQUEST_CODE_PERMISSIONS
-import com.vyy.intelligenteye.utils.Constants.RETINAL_DISEASES
+import com.vyy.intelligenteye.utils.ImageClassifierHelper
 import com.vyy.intelligenteye.utils.InputFilterMinMax
 import com.vyy.intelligenteye.utils.checkEnoughTimePassed
 import kotlinx.coroutines.*
+import java.math.RoundingMode
+import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayDeque
+import kotlin.math.roundToInt
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var cameraExecutor: ExecutorService
+    private var imageClassifierHelper: ImageClassifierHelper? = null
+
     private var imageCapture: ImageCapture? = null
     private var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>? = null
     private var imageUri: Uri? = null
@@ -102,7 +105,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
                 bitmap
             }
-            updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
         }
     }
 
@@ -137,8 +139,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 R.id.imageButton_undo, R.id.cameraButton, R.id.galleryButton -> {
                     cancelCurrentJobs()
                     updateSelectedProcess(null)
-                    updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
-
                     when (v.id) {
                         R.id.imageButton_undo -> removeFromImageStack()
                         R.id.cameraButton -> takePhoto()
@@ -150,7 +150,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     cancelCurrentJobs(
                         isImageUriToBitmapCanceled = false
                     )
-                    updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
                     updateSelectedProcess(v.id)
                     imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                         reflectBitmap(isReflectOnXAxis = v.id == R.id.imageButton_reflect_x_axis)
@@ -165,13 +164,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     cancelCurrentJobs(
                         isImageUriToBitmapCanceled = false
                     )
-
                     if (selectedProcess == R.id.imageButton_resize) {
                         val width = binding.textInputEditTextWidth.text.toString()
                         val height = binding.textInputEditTextHeight.text.toString()
 
                         if (checkIfInputsValid(listOf(width, height))) {
-                            updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
                             imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                                 resizeBitmap(
                                     width.toDouble(), height.toDouble()
@@ -184,7 +181,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         val toX = binding.textInputEditTextToX.text.toString()
                         val toY = binding.textInputEditTextToY.text.toString()
                         if (checkIfInputsValid(listOf(fromX, fromY, toX, toY))) {
-                            updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
                             imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
                                 cropBitmap(
                                     fromX.toDouble(),
@@ -321,8 +317,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         ).build()
 
 
-        imageCapture.takePicture(
-            outputOptions,
+        imageCapture.takePicture(outputOptions,
             cameraExecutor,
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
@@ -400,7 +395,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
 
-            if (checkEnoughTimePassed() && imageBitmap != null && width <= MAX_WIDTH && height <= MAX_HEIGHT) {
+            if (checkEnoughTimePassed() && imageBitmap != null
+                && width <= MAX_WIDTH && height <= MAX_HEIGHT) {
                 // Since this operation takes time, we use Dispatchers.Default,
                 // which is optimized for time consuming calculations.
                 val resizedBitmapDrawable = withContext(Dispatchers.Default) {
@@ -434,7 +430,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
             // X and Y points are taken proportional to the width and height of the bitmap
-            if (checkEnoughTimePassed() && imageBitmap != null && fromXRatio <= 1 && fromYRatio <= 1 && toXRatio <= 1 && toYRatio <= 1 && fromXRatio < toXRatio && fromYRatio < toYRatio) {
+            if (checkEnoughTimePassed() && imageBitmap != null
+                && fromXRatio <= 1 && fromYRatio <= 1
+                && toXRatio <= 1 && toYRatio <= 1
+                && fromXRatio < toXRatio && fromYRatio < toYRatio) {
                 // Since this operation takes time, we use Dispatchers.Default,
                 // which is optimized for time consuming calculations.
                 val croppedBitmapDrawable = withContext(Dispatchers.Default) {
@@ -471,9 +470,25 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 // Since this operation takes time, we use Dispatchers.Default,
                 // which is optimized for time consuming calculations.
 
-                delay(2000)
-                val eyeDiseasesList = listOf(RETINAL_DISEASES, CATARACT, GLAUCOMA, NO_DISEASE)
-                updateEyeDiseaseViews(eyeDiseaseType = eyeDiseasesList.random())
+                if (imageClassifierHelper == null) {
+                    imageClassifierHelper = ImageClassifierHelper(this)
+                }
+
+                var inferenceTime = SystemClock.uptimeMillis()
+
+                val result = withContext(Dispatchers.Default) {
+                    imageClassifierHelper?.classify(imageBitmap!!)
+                }
+                Log.d(TAG, result.toString())
+
+                val label = result?.get(0)?.categories?.get(0)?.label
+                val score = result?.get(0)?.categories?.get(0)?.score
+
+                inferenceTime = SystemClock.uptimeMillis() - inferenceTime
+                if (label != null && score != null) {
+                    updateEyeDiseaseViews(true, label, score, inferenceTime)
+                }
+
             }
         } catch (e: Exception) {
             Log.e(TAG, "Eye disease analysis is failed: ${e.message}", e)
@@ -502,15 +517,24 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         imageStack.addLast(bitmap)
-        if (imageStack.size > IMAGE_STACK_SIZE_MIN) {
-            withContext(Dispatchers.Main) {
-                binding.imageButtonUndo.visibility = View.VISIBLE
+
+        // Loading ML model after views are shown, thus reducing the loading time of the activity.
+        binding.imageView.post {
+            if (imageClassifierHelper == null) {
+                imageClassifierHelper = ImageClassifierHelper(this)
             }
+        }
+
+        withContext(Dispatchers.Main) {
+            binding.imageButtonUndo.visibility =
+                if (imageStack.size > 1) View.VISIBLE else View.GONE
+            updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
         }
     }
 
     private fun removeFromImageStack() {
         updateSelectedProcess(null)
+        updateEyeDiseaseViews(isViewsVisible = imageStack.size > 0)
 
         if (imageStack.size > IMAGE_STACK_SIZE_MIN) {
             imageStack.removeLast()
@@ -554,31 +578,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
         }
 
-        val cropInputLayouts = listOf(
-            binding.textInputLayoutFromX,
-            binding.textInputLayoutFromY,
-            binding.textInputLayoutToX,
-            binding.textInputLayoutToY
-        )
-        val widthAndHeightLayouts = listOf(
-            binding.textInputLayoutWidth, binding.textInputLayoutHeight
-        )
-
         if (imageButtonId != null && imageButtonId == R.id.imageButton_crop) {
-            cropInputLayouts.forEach {
-                it.visibility = View.VISIBLE
-            }
+            inputLayoutsVisibility(isResizeLayoutsVisible = false, isCropLayoutsVisible = true)
         } else if (imageButtonId != null && imageButtonId == R.id.imageButton_resize) {
-            widthAndHeightLayouts.forEach {
-                it.visibility = View.VISIBLE
-            }
+            inputLayoutsVisibility(isResizeLayoutsVisible = true, isCropLayoutsVisible = false)
         } else {
-            cropInputLayouts.forEach {
-                it.visibility = View.GONE
-            }
-            widthAndHeightLayouts.forEach {
-                it.visibility = View.GONE
-            }
+            inputLayoutsVisibility(isResizeLayoutsVisible = false, isCropLayoutsVisible = false)
         }
 
         if (imageButtonId != null && (imageButtonId == R.id.imageButton_crop || imageButtonId == R.id.imageButton_resize)) {
@@ -591,6 +596,27 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 buttonProcess.visibility = View.GONE
                 viewSeparatorLineVertical.visibility = View.GONE
             }
+        }
+    }
+
+    private fun inputLayoutsVisibility(
+        isResizeLayoutsVisible: Boolean = false, isCropLayoutsVisible: Boolean = false
+    ) {
+        val cropInputLayouts = listOf(
+            binding.textInputLayoutFromX,
+            binding.textInputLayoutFromY,
+            binding.textInputLayoutToX,
+            binding.textInputLayoutToY
+        )
+        val widthAndHeightLayouts = listOf(
+            binding.textInputLayoutWidth, binding.textInputLayoutHeight
+        )
+
+        cropInputLayouts.forEach {
+            it.visibility = if (isCropLayoutsVisible) View.VISIBLE else View.GONE
+        }
+        widthAndHeightLayouts.forEach {
+            it.visibility = if (isResizeLayoutsVisible) View.VISIBLE else View.GONE
         }
     }
 
@@ -611,52 +637,79 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun updateEyeDiseaseViews(isViewsVisible: Boolean = true, eyeDiseaseType: String = "") {
+    private fun updateEyeDiseaseViews(
+        isViewsVisible: Boolean = true,
+        eyeDiseaseType: String = "",
+        score: Float = 0f,
+        timing: Long = 0
+    ) {
+        val resultViews = with(binding) {
+            listOf(
+                textViewTimingTitle,
+                textViewTimingText,
+                textViewConfidenceTitle,
+                textViewConfidenceText,
+                textViewAnalyzeResult,
+                viewEyeDiseaseIndicator
+            )
+        }
+
         if (eyeDiseaseType.isNotEmpty() && isViewsVisible) {
-            binding.apply {
-                textViewAnalyzeResult.visibility = View.VISIBLE
-                viewEyeDiseaseIndicator.visibility = View.VISIBLE
-                viewEyeDiseaseIndicator.background = when (eyeDiseaseType) {
-                    NO_DISEASE -> ContextCompat.getDrawable(
-                        this@MainActivity, R.drawable.circular_green_indicator
-                    )
-                    else -> ContextCompat.getDrawable(
-                        this@MainActivity, R.drawable.circular_red_indicator
-                    )
-                }
-                textViewAnalyzeResult.text = when (eyeDiseaseType) {
-                    RETINAL_DISEASES -> {
-                        getString(R.string.retinal_disease_detected)
-                    }
-                    CATARACT -> {
-                        getString(R.string.cataract_detected)
-                    }
-                    GLAUCOMA -> {
-                        getString(R.string.glaucoma_detected)
-                    }
-                    else -> {
-                        getString(R.string.no_disease_detected)
-                    }
-                }
-                textViewAnalyzeResult.setTextColor(
-                    if (eyeDiseaseType == NO_DISEASE) {
-                        ContextCompat.getColor(this@MainActivity, R.color.green)
-                    } else {
-                        ContextCompat.getColor(this@MainActivity, R.color.red)
-                    }
-                )
-                buttonAnalyze.visibility = View.GONE
+            resultViews.forEach { it.visibility = View.VISIBLE }
+            binding.textViewAnalyzeResult.text = eyeDiseaseType
+//                viewEyeDiseaseIndicator.background = when (eyeDiseaseType) {
+//                    NO_DISEASE -> ContextCompat.getDrawable(
+//                        this@MainActivity, R.drawable.circular_green_indicator
+//                    )
+//                    else -> ContextCompat.getDrawable(
+//                        this@MainActivity, R.drawable.circular_red_indicator
+//                    )
+//                }
+//                textViewAnalyzeResult.text = when (eyeDiseaseType) {
+//                    RETINAL_DISEASES -> {
+//                        getString(R.string.retinal_disease_detected)
+//                    }
+//                    CATARACT -> {
+//                        getString(R.string.cataract_detected)
+//                    }
+//                    GLAUCOMA -> {
+//                        getString(R.string.glaucoma_detected)
+//                    }
+//                    else -> {
+//                        getString(R.string.no_disease_detected)
+//                    }
+//                }
+//                textViewAnalyzeResult.setTextColor(
+//                    if (eyeDiseaseType == NO_DISEASE) {
+//                        ContextCompat.getColor(this@MainActivity, R.color.green)
+//                    } else {
+//                        ContextCompat.getColor(this@MainActivity, R.color.red)
+//                    }
+//                )
+            binding.buttonAnalyze.visibility = View.GONE
+
+            if (timing > 0) {
+                val df = DecimalFormat("#.##")
+                df.roundingMode = RoundingMode.HALF_UP
+                val timeInSeconds = df.format(timing.toDouble() / 1000)
+                val timeText = " $timeInSeconds ${getString(R.string.seconds)}"
+                binding.textViewTimingText.text = timeText
             }
+
+            if (score > 0f) {
+                val confidencePercent = (score.toDouble() * 100).roundToInt()
+                val confidenceText = " $confidencePercent%"
+                binding.textViewConfidenceText.text = confidenceText
+            }
+
         } else if (isViewsVisible) {
             binding.apply {
-                textViewAnalyzeResult.visibility = View.GONE
-                viewEyeDiseaseIndicator.visibility = View.GONE
+                resultViews.forEach { it.visibility = View.GONE }
                 buttonAnalyze.visibility = View.VISIBLE
             }
         } else {
             binding.apply {
-                textViewAnalyzeResult.visibility = View.GONE
-                viewEyeDiseaseIndicator.visibility = View.GONE
+                resultViews.forEach { it.visibility = View.GONE }
                 buttonAnalyze.visibility = View.GONE
             }
         }

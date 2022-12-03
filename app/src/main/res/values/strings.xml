@@ -3,6 +3,7 @@
     <string name="image">Image</string>
     <string name="width">Width</string>
     <string name="height">Height</string>
+    <string name="seconds">seconds</string>
     <string name="reflect_on_y_axis">Reflect on Y Axis.</string>
     <string name="reflect_on_x_axis">Reflect on X Axis.</string>
     <string name="pick_image_from_gallery">Pick image from gallery.</string>
@@ -22,4 +23,6 @@
     <string name="cataract_detected">Cataract Detected!</string>
     <string name="glaucoma_detected">Glaucoma Detected!</string>
     <string name="no_disease_detected">No Disease Detected</string>
+    <string name="confidence">Confidence:</string>
+    <string name="timing">Timing:</string>
 </resources>
