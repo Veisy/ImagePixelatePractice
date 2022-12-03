@@ -84,14 +84,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         setEditTextFilters()
 
         cameraExecutor = Executors.newSingleThreadExecutor()
-        imageClassifierSetupDeferred = this.lifecycleScope.async(Dispatchers.IO) {
-            ImageClassifierHelper(this@MainActivity)
-        }
     }
 
     override fun onStart() {
         super.onStart()
         checkPermissions()
+
+        setupImageClassifierIfNull()
 
         // Default Image
         if (imageStack.size < 1) {
@@ -107,6 +106,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     addToImageStack(bitmap)
                 }
                 bitmap
+            }
+        }
+    }
+
+    private fun setupImageClassifierIfNull() {
+        if (imageClassifierSetupDeferred == null) {
+            imageClassifierSetupDeferred = this.lifecycleScope.async(Dispatchers.IO) {
+                ImageClassifierHelper(this@MainActivity)
             }
         }
     }
@@ -474,6 +481,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         try {
             showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
+            setupImageClassifierIfNull()
             val imageClassifierHelper = imageClassifierSetupDeferred?.await()
             if (checkEnoughTimePassed() && imageBitmap != null && imageClassifierHelper != null) {
                 // Since this operation takes time, we use Dispatchers.Default,
