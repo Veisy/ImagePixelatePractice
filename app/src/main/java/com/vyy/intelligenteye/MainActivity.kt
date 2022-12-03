@@ -82,15 +82,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         registerActivityResultCallbacks()
         setClickListeners()
         setEditTextFilters()
-
-        cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
     override fun onStart() {
         super.onStart()
         checkPermissions()
-
-        setupImageClassifierIfNull()
+        cameraExecutor = Executors.newSingleThreadExecutor()
+        setupImageClassifier()
 
         // Default Image
         if (imageStack.size < 1) {
@@ -110,7 +108,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun setupImageClassifierIfNull() {
+    private fun setupImageClassifier() {
         if (imageClassifierSetupDeferred == null) {
             imageClassifierSetupDeferred = this.lifecycleScope.async(Dispatchers.IO) {
                 ImageClassifierHelper(this@MainActivity)
@@ -481,7 +479,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         try {
             showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
-            setupImageClassifierIfNull()
             val imageClassifierHelper = imageClassifierSetupDeferred?.await()
             if (checkEnoughTimePassed() && imageBitmap != null && imageClassifierHelper != null) {
                 // Since this operation takes time, we use Dispatchers.Default,
@@ -760,10 +757,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onStop() {
         super.onStop()
         cancelCurrentJobs()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
         cameraExecutor.shutdown()
     }
 
