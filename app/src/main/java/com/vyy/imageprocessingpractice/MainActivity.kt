@@ -57,6 +57,7 @@ import com.vyy.imageprocessingpractice.utils.Constants.WIENER_FILTER
 import com.vyy.imageprocessingpractice.utils.InputFilterMinMax
 import com.vyy.imageprocessingpractice.utils.checkEnoughTimePassed
 import kotlinx.coroutines.*
+import org.opencv.android.OpenCVLoader
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -89,13 +90,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         setClickListeners()
         setEditTextFilters()
 
-        cameraExecutor = Executors.newSingleThreadExecutor()
+        if (OpenCVLoader.initDebug()) {
+            Log.d("OpenCV", "OpenCV loaded successfully")
+        } else {
+            Log.d("OpenCV", "OpenCV not loaded")
+        }
     }
 
     override fun onStart() {
         super.onStart()
 
         checkPermissions()
+
+        cameraExecutor = Executors.newSingleThreadExecutor()
 
         // Default Image is Lenna.
         if (imageStack.size < 1) {
@@ -874,10 +881,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onStop() {
         super.onStop()
         cancelCurrentJobs()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
         cameraExecutor.shutdown()
     }
 
