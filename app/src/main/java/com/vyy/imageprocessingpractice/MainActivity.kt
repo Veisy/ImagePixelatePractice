@@ -610,6 +610,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         RGB_TO_HSV -> rgbToHsv(
                             bitmap = imageBitmap!!, resources = resources
                         )
+                        HIGH_PASS_FILTER -> applyHighPassFilter(
+                            bitmap = imageBitmap!!, resources = resources
+                        )
+
                         else -> {
                             val grayBitmap = rgbToGray(
                                 bitmap = imageBitmap!!, resources = resources
