@@ -610,9 +610,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         RGB_TO_HSV -> rgbToHsv(
                             bitmap = imageBitmap!!, resources = resources
                         )
-                        WIENER_FILTER -> applyWienerFilter(
-                            bitmap = imageBitmap!!, resources = resources, k = 0.001
-                        )
                         else -> {
                             val grayBitmap = rgbToGray(
                                 bitmap = imageBitmap!!, resources = resources
