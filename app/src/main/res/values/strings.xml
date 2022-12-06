@@ -29,9 +29,9 @@
     <string name="laplacian_filter">LAPLACIAN FILTER</string>
     <string name="sobel_gradient">SOBEL GRADIENT</string>
     <string name="special_operation">SPECIAL OPERATION</string>
+    <string name="special_operation_2">SPECIAL OPERATION 2</string>
     <string name="gamma_transformation">GAMMA TRANSFORMATION</string>
     <string name="lung_segmentation">LUNG SEGMENTATION</string>
-    <string name="low_pass_filter">LOW PASS FILTER</string>
     <string name="high_pass_filter">HIGH PASS FILTER</string>
     <string name="restore">RESTORE</string>
     <string name="wiener_filter">WIENER FILTER</string>

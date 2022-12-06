@@ -34,14 +34,14 @@ import com.vyy.imagemosaicing.R
 import com.vyy.imagemosaicing.databinding.ActivityMainBinding
 import com.vyy.imageprocessingpractice.processes.*
 import com.vyy.imageprocessingpractice.utils.Constants.AVERAGE_FILTER
-import com.vyy.imageprocessingpractice.utils.Constants.DEFAULT_SPECIAL_OPERATION
+import com.vyy.imageprocessingpractice.utils.Constants.SPECIAL_OPERATION_1
 import com.vyy.imageprocessingpractice.utils.Constants.FILENAME_FORMAT
 import com.vyy.imageprocessingpractice.utils.Constants.GAMMA_TRANSFORMATION
 import com.vyy.imageprocessingpractice.utils.Constants.HIGH_PASS_FILTER
 import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MAX
 import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MIN
 import com.vyy.imageprocessingpractice.utils.Constants.LAPLACIAN_FILTER
-import com.vyy.imageprocessingpractice.utils.Constants.LOW_PASS_FILTER
+import com.vyy.imageprocessingpractice.utils.Constants.SPECIAL_OPERATION_2
 import com.vyy.imageprocessingpractice.utils.Constants.LUNG_SEGMENTATION
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_FILTER
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_HEIGHT
@@ -157,7 +157,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             buttonGammaTransformation.setOnClickListener(this@MainActivity)
             buttonSpecialOperation.setOnClickListener(this@MainActivity)
             buttonLungSegmentation.setOnClickListener(this@MainActivity)
-            buttonLowPassFilter.setOnClickListener(this@MainActivity)
+            buttonSpecialOperation2.setOnClickListener(this@MainActivity)
             buttonHighPassFilter.setOnClickListener(this@MainActivity)
             buttonWienerFilter.setOnClickListener(this@MainActivity)
         }
@@ -235,8 +235,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 R.id.button_rgbToHsi, R.id.button_rgbToHsv, R.id.textView_rgb,
                 R.id.button_minFilter, R.id.button_maxFilter, R.id.button_medianFilter, R.id.button_averageFilter,
                 R.id.button_laplacianFilter, R.id.button_sobelGradient, R.id.button_gammaTransformation,
-                R.id.button_lowPassFilter, R.id.button_highPassFilter,
-                R.id.button_wienerFilter -> {
+                R.id.button_highPassFilter, R.id.button_wienerFilter -> {
                     cancelCurrentJobs(isImageUriToBitmapCanceled = false)
                     updateSelectedProcess(v.id)
                     imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
@@ -252,7 +251,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 R.id.button_laplacianFilter -> LAPLACIAN_FILTER
                                 R.id.button_sobelGradient -> SOBEL_GRADIENT
                                 R.id.button_gammaTransformation -> GAMMA_TRANSFORMATION
-                                R.id.button_lowPassFilter -> LOW_PASS_FILTER
                                 R.id.button_highPassFilter -> HIGH_PASS_FILTER
                                 R.id.button_wienerFilter -> WIENER_FILTER
                                 else -> RGB_TO_GRAY
@@ -261,13 +259,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     }
                 }
 
-                R.id.button_specialOperation, R.id.button_lungSegmentation -> {
+                R.id.button_specialOperation, R.id.button_lungSegmentation, R.id.button_specialOperation2 -> {
                     cancelCurrentJobs(isImageUriToBitmapCanceled = false)
                     updateSelectedProcess(v.id)
                     imageProcessingJob = this.lifecycleScope.launch(Dispatchers.Main) {
-                        specialBitmapOperation(
+                        slideshow(
                             when (v.id) {
-                                R.id.button_specialOperation -> DEFAULT_SPECIAL_OPERATION
+                                R.id.button_specialOperation -> SPECIAL_OPERATION_1
+                                R.id.button_specialOperation2 -> SPECIAL_OPERATION_2
                                 else -> LUNG_SEGMENTATION
                             }
                         )
@@ -660,7 +659,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private suspend fun specialBitmapOperation(specialOperationName: String) {
+    private suspend fun slideshow(specialOperationName: String) {
         try {
             showProgressBar(true)
             imageBitmap = imageUriToBitmapDeferred?.await()
@@ -670,8 +669,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 // which is optimized for time consuming calculations.
                 val listOfBitmapDrawables = withContext(Dispatchers.Default) {
                     when (specialOperationName) {
-                        DEFAULT_SPECIAL_OPERATION -> specialImageOperation(
+                        SPECIAL_OPERATION_1 -> specialImageOperations(
                             originalBitmap = imageBitmap!!, resources = resources
+                        )
+                        SPECIAL_OPERATION_2 -> specialFrequencyOperation(
+                            bitmap = imageBitmap!!, resources = resources
                         )
                         else -> lungOperations(
                             originalBitmap = imageBitmap!!, resources = resources

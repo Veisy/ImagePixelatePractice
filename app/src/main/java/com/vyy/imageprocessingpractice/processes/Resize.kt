@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import androidx.core.graphics.drawable.toDrawable
 import com.vyy.imageprocessingpractice.utils.lastProcessTime
-import com.vyy.imageprocessingpractice.utils.nearest2Power
 
 /**
  * Scales image using bilinear interpolation. Best suited for up scaling.

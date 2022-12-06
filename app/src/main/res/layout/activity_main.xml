@@ -213,16 +213,6 @@
                 app:layout_constraintStart_toEndOf="@id/button_lungSegmentation"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <Button
-                android:id="@+id/button_lowPassFilter"
-                style="@style/normalButtonStyle"
-                android:text="@string/low_pass_filter"
-                android:textColor="@color/colorPrimaryVariant"
-                android:textSize="@dimen/textSize_small"
-                app:backgroundTint="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/button_wienerFilter"
-                app:layout_constraintTop_toTopOf="parent" />
 
             <Button
                 android:id="@+id/button_highPassFilter"
@@ -232,7 +222,7 @@
                 android:textSize="@dimen/textSize_small"
                 app:backgroundTint="@color/white"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/button_lowPassFilter"
+                app:layout_constraintStart_toEndOf="@id/button_wienerFilter"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <Button
@@ -321,6 +311,17 @@
                 app:backgroundTint="@color/white"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@id/button_gammaTransformation"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/button_specialOperation2"
+                style="@style/normalButtonStyle"
+                android:text="@string/special_operation_2"
+                android:textColor="@color/colorPrimaryVariant"
+                android:textSize="@dimen/textSize_small"
+                app:backgroundTint="@color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/button_specialOperation"
                 app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </HorizontalScrollView>
