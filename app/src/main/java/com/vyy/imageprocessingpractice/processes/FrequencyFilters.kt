@@ -88,6 +88,12 @@ fun specialFrequencyOperation(bitmap: Bitmap, resources: Resources): List<Bitmap
     val radius = 40.0
     Imgproc.circle(mask, center, radius.toInt(), Scalar(1.0), -1, 8, 0)
     Core.multiply(magnitude, mask, magnitude)
+    intermediateBitmapDrawables.addMat(magnitude, resources)
+
+    // Blur the image
+    Imgproc.GaussianBlur(magnitude, magnitude, Size(5.0, 5.0), 0.0)
+    // Sharpen the image
+    Core.addWeighted(magnitude, 1.5, magnitude, -0.5, 0.0, magnitude)
 
     // Store masked/shifted magnitude
     intermediateBitmapDrawables.addMat(magnitude, resources)
@@ -110,7 +116,12 @@ fun specialFrequencyOperation(bitmap: Bitmap, resources: Resources): List<Bitmap
     // Cut the padded part
     planes[0].submat(Rect(0, 0, image.cols(), image.rows())).copyTo(planes[0])
 
-    intermediateBitmapDrawables.addMat(planes[0], resources)
+    val restoredImage = Mat()
+    Core.normalize(planes[0], restoredImage, 0.0, 255.0, Core.NORM_MINMAX);
+    restoredImage.convertTo(restoredImage, CvType.CV_8UC1)
+    val resultBitmap = Bitmap.createBitmap(restoredImage.cols(), restoredImage.rows(), Bitmap.Config.ARGB_8888)
+    Utils.matToBitmap(restoredImage, resultBitmap)
+    intermediateBitmapDrawables.add(resultBitmap.toDrawable(resources))
     return intermediateBitmapDrawables
 }
 
