@@ -35,7 +35,8 @@ fun lungOperations(originalBitmap: Bitmap, resources: Resources): List<BitmapDra
         resources
     )
 
-    return listOf(b, c, d)
+    val e = crop(d.bitmap, fromX = (d.bitmap.width/7.5).toInt(), fromY = (d.bitmap.height/10), toX = (d.bitmap.width/1.15).toInt(), toY = (d.bitmap.height/1.4).toInt(), resources)
+    return listOf(b, c, d, e)
 }
 
 private fun highlightCorners(bitmap: Bitmap, resources: Resources): BitmapDrawable =
