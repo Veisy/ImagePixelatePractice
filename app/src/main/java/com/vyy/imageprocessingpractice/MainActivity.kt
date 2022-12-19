@@ -34,25 +34,28 @@ import com.vyy.imagemosaicing.R
 import com.vyy.imagemosaicing.databinding.ActivityMainBinding
 import com.vyy.imageprocessingpractice.processes.*
 import com.vyy.imageprocessingpractice.utils.Constants.AVERAGE_FILTER
-import com.vyy.imageprocessingpractice.utils.Constants.SPECIAL_OPERATION_1
+import com.vyy.imageprocessingpractice.utils.Constants.AVERAGE_THRESHOLD
 import com.vyy.imageprocessingpractice.utils.Constants.FILENAME_FORMAT
 import com.vyy.imageprocessingpractice.utils.Constants.GAMMA_TRANSFORMATION
 import com.vyy.imageprocessingpractice.utils.Constants.HIGH_PASS_FILTER
 import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MAX
 import com.vyy.imageprocessingpractice.utils.Constants.IMAGE_STACK_SIZE_MIN
 import com.vyy.imageprocessingpractice.utils.Constants.LAPLACIAN_FILTER
-import com.vyy.imageprocessingpractice.utils.Constants.SPECIAL_OPERATION_2
 import com.vyy.imageprocessingpractice.utils.Constants.LUNG_SEGMENTATION
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_FILTER
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_HEIGHT
 import com.vyy.imageprocessingpractice.utils.Constants.MAX_WIDTH
 import com.vyy.imageprocessingpractice.utils.Constants.MEDIAN_FILTER
 import com.vyy.imageprocessingpractice.utils.Constants.MIN_FILTER
+import com.vyy.imageprocessingpractice.utils.Constants.OTSU_THRESHOLD
 import com.vyy.imageprocessingpractice.utils.Constants.REQUEST_CODE_PERMISSIONS
 import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_GRAY
 import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_HSI
 import com.vyy.imageprocessingpractice.utils.Constants.RGB_TO_HSV
 import com.vyy.imageprocessingpractice.utils.Constants.SOBEL_GRADIENT
+import com.vyy.imageprocessingpractice.utils.Constants.SPECIAL_OPERATION_1
+import com.vyy.imageprocessingpractice.utils.Constants.SPECIAL_OPERATION_2
+import com.vyy.imageprocessingpractice.utils.Constants.SPECIAL_THRESHOLD
 import com.vyy.imageprocessingpractice.utils.Constants.WIENER_FILTER
 import com.vyy.imageprocessingpractice.utils.InputFilterMinMax
 import com.vyy.imageprocessingpractice.utils.checkEnoughTimePassed
@@ -160,6 +163,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             buttonSpecialOperation2.setOnClickListener(this@MainActivity)
             buttonHighPassFilter.setOnClickListener(this@MainActivity)
             buttonWienerFilter.setOnClickListener(this@MainActivity)
+            buttonAverageThreshold.setOnClickListener(this@MainActivity)
+            buttonOtsuThreshold.setOnClickListener(this@MainActivity)
+            buttonSpecialThreshold.setOnClickListener(this@MainActivity)
         }
     }
 
@@ -232,7 +238,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     }
                 }
 
-                R.id.button_rgbToHsi, R.id.button_rgbToHsv, R.id.textView_rgb,
+                R.id.button_rgbToHsi, R.id.button_rgbToHsv, R.id.textView_rgb, R.id.button_averageThreshold, R.id.button_otsuThreshold, R.id.button_specialThreshold,
                 R.id.button_minFilter, R.id.button_maxFilter, R.id.button_medianFilter, R.id.button_averageFilter,
                 R.id.button_laplacianFilter, R.id.button_sobelGradient, R.id.button_gammaTransformation,
                 R.id.button_highPassFilter, R.id.button_wienerFilter -> {
@@ -244,6 +250,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 R.id.button_rgbToHsi -> RGB_TO_HSI
                                 R.id.button_rgbToHsv -> RGB_TO_HSV
                                 R.id.textView_rgb -> RGB_TO_GRAY
+                                R.id.button_averageThreshold -> AVERAGE_THRESHOLD
+                                R.id.button_otsuThreshold -> OTSU_THRESHOLD
+                                R.id.button_specialThreshold -> SPECIAL_THRESHOLD
                                 R.id.button_minFilter -> MIN_FILTER
                                 R.id.button_maxFilter -> MAX_FILTER
                                 R.id.button_medianFilter -> MEDIAN_FILTER
@@ -609,10 +618,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         RGB_TO_HSV -> rgbToHsv(
                             bitmap = imageBitmap!!, resources = resources
                         )
-                        HIGH_PASS_FILTER -> applyHighPassFilter(
+                        AVERAGE_THRESHOLD -> applyAverageThreshold(
                             bitmap = imageBitmap!!, resources = resources
                         )
-
+                        OTSU_THRESHOLD -> applyOtsuMethod(
+                            bitmap = imageBitmap!!, resources = resources
+                        )
+                        SPECIAL_THRESHOLD -> applySpecialThreshold(
+                            bitmap = imageBitmap!!, resources = resources
+                        )
                         else -> {
                             val grayBitmap = rgbToGray(
                                 bitmap = imageBitmap!!, resources = resources

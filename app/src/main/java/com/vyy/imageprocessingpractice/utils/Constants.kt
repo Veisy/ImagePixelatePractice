@@ -23,6 +23,9 @@ object Constants {
     const val LUNG_SEGMENTATION = "LUNG_SEGMENTATION"
     const val HIGH_PASS_FILTER = "HIGH_PASS_FILTER"
     const val WIENER_FILTER = "WIENER_FILTER"
+    const val AVERAGE_THRESHOLD = "AVERAGE_THRESHOLD"
+    const val OTSU_THRESHOLD = "OTSU_THRESHOLD"
+    const val SPECIAL_THRESHOLD = "SPECIAL_THRESHOLD"
 
     const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
     const val REQUEST_CODE_PERMISSIONS = 10

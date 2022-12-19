@@ -39,7 +39,8 @@ fun lungOperations(originalBitmap: Bitmap, resources: Resources): List<BitmapDra
 
     val d = lungOperation1(c.bitmap, resources)
     val e = lungOperation2(d.bitmap, resources)
-    return listOf(b, c, d, e)
+    val f = applyOtsuMethod(e.bitmap, resources)
+    return listOf(b, c, d, e, f)
 }
 
 private fun highlightCorners(bitmap: Bitmap, resources: Resources): BitmapDrawable =

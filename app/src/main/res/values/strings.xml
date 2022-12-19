@@ -35,4 +35,7 @@
     <string name="high_pass_filter">HIGH PASS FILTER</string>
     <string name="restore">RESTORE</string>
     <string name="wiener_filter">WIENER FILTER</string>
+    <string name="average_threshold">AVERAGE THRESHOLD</string>
+    <string name="otsu_threshold">OTSU THRESHOLD</string>
+    <string name="special_threshold">SPECIAL THRESHOLD</string>
 </resources>
